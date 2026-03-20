@@ -12,22 +12,37 @@
             <div class="booking__infor">
                 <div class="form-group">
                     <label for="username">Họ và tên*</label>
+<<<<<<< HEAD
                     <input type="text" name="fullName"
                             value="{{ $tour_booked->fullName ?? '' }}" readonly>
+=======
+                    <input type="text" id="username" placeholder="Nhập Họ và tên" name="fullName"
+                        value="{{ $tour_booked->fullName }}" readonly>
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
                     <span class="error-message" id="usernameError"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email*</label>
+<<<<<<< HEAD
                     <input type="email" name="email"
                         value="{{ $tour_booked->email ?? '' }}" readonly>
+=======
+                    <input type="email" id="email" placeholder="sample@gmail.com" name="email"
+                        value="{{ $tour_booked->email }}" readonly>
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
                     <span class="error-message" id="emailError"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="tel">Số điện thoại*</label>
+<<<<<<< HEAD
                     <input type="number" name="tel"
                         value="{{ $tour_booked->phoneNumber ?? '' }}" readonly>
+=======
+                    <input type="number" id="tel" placeholder="Nhập số điện thoại liên hệ" name="tel"
+                        value="{{ $tour_booked->phoneNumber }}" readonly>
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
                     <span class="error-message" id="telError"></span>
                 </div>
 

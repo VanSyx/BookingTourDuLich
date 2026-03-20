@@ -247,8 +247,14 @@
                         <h5 class="widget-title">Cần trợ giúp?</h5>
                         <ul class="list-style-one">
                             <li><i class="far fa-envelope"></i> <a
+<<<<<<< HEAD
                                     href="emilto:minhdien.dev@gmail.com">admin@gmail.com</a></li>
                             <li><i class="far fa-phone-volume"></i> <a href="callto:123456789">123 456 789</a></li>
+=======
+                                    href="emilto:minhdien.dev@gmail.com">minhdien.dev@gmail.com</a></li>
+                            <li><i class="far fa-phone-volume"></i> <a href="callto:+000(123)45688">+000 (123) 456
+                                    88</a></li>
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
                         </ul>
                     </div>
                     @if (!empty($tourRecommendations))

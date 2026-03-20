@@ -3,4 +3,8 @@
 <button>
     <a href="{{ $link }}">Kích hoạt tài khoản</a>
 </button>
+<<<<<<< HEAD
 <p>Trân trọng,<br>admin</p>
+=======
+<p>Trân trọng,<br>Nguyễn Minh Diện.</p>
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866

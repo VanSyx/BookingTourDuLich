@@ -13,7 +13,12 @@
                             @foreach ($toursPopular as $tour)
                                 <div class="destination-item tour-grid style-three bgc-lighter">
                                     <div class="image">
+<<<<<<< HEAD
                                     <img src="{{ asset('clients/images/gallery-tours/' . (explode(',', $tour->images ?? '')[0] ?? 'default.jpg')) }}">
+=======
+                                        <img src="{{ asset('admin/assets/images/gallery-tours/' . $tour->images[0]) }}"
+                                            alt="Tour">
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
                                     </div>
                                     <div class="content">
                                         <div class="destination-header">
@@ -51,7 +56,12 @@
                             @endif
 
 
+<<<<<<< HEAD
                             <img src="{{ asset('clients/images/gallery-tours/' . (explode(',', $tour->images ?? '')[0] ?? 'default.jpg')) }}">
+=======
+                            <img src="{{ asset('admin/assets/images/gallery-tours/' . $tour->images[0] . '') }}"
+                                alt="Tour List">
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
                         </div>
                         <div class="content">
                             <div class="destination-header">

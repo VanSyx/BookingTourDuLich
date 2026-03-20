@@ -12,6 +12,7 @@ class BookingModel extends Model
 
     protected $table = 'tbl_booking';
 
+<<<<<<< HEAD
     public function getBooking()
     {
         return DB::table($this->table)
@@ -30,6 +31,17 @@ class BookingModel extends Model
             )
             ->orderByDesc('tbl_booking.bookingDate')
             ->get();
+=======
+    public function getBooking(){
+
+        $list_booking = DB::table($this->table)
+        ->join('tbl_tours', 'tbl_tours.tourId', '=', 'tbl_booking.tourId')
+        ->join('tbl_checkout', 'tbl_booking.bookingId', '=', 'tbl_checkout.bookingId')
+        ->orderByDesc('bookingDate')
+        ->get();
+
+        return $list_booking;
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
     }
 
     public function updateBooking($bookingId, $data){

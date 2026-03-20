@@ -197,12 +197,23 @@ class BookingController extends Controller
     }
 
     //Kiểm tra người dùng đã đặt và hoàn thành tour hay chưa để đánh giá
+<<<<<<< HEAD
     public function checkBooking($tourId, $userId)
     {
         return $this->where('tourId', $tourId)
                     ->where('userId', $userId)
                     ->where('bookingStatus', 'f')
                     ->exists();
+=======
+    public function checkBooking(Request $req){
+        $tourId = $req->tourId;
+        $userId = $this->getUserId();
+        $check = $this->booking->checkBooking($tourId,$userId);
+        if (!$check) {
+            return response()->json(['success' => false]);
+        }
+        return response()->json(['success' => true]);
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
     }
 
 }

@@ -153,6 +153,7 @@ class BookingManagementController extends Controller
 
     private function updateHideBooking($list_booking)
     {
+<<<<<<< HEAD
         if (!$list_booking) {
             return []; // 🔥 tránh lỗi null
         }
@@ -165,6 +166,21 @@ class BookingManagementController extends Controller
             } else {
                 $booking->hide = 'hide';
             }
+=======
+        // Lấy ngày hiện tại
+        $currentDate = date('Y-m-d');
+
+        foreach ($list_booking as $booking) {
+            // So sánh endDate của booking với ngày hiện tại
+            if ($booking->endDate < $currentDate) {
+                $hide = '';
+            } else {
+                $hide = 'hide';
+            }
+
+            // Gán giá trị $hide vào mỗi booking
+            $booking->hide = $hide;
+>>>>>>> 2bb38fb3467dcaa7830d94d14349521cd7b9c866
         }
 
         return $list_booking;
