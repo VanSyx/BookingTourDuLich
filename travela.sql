@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th3 06, 2026 lúc 05:17 AM
+-- Thời gian đã tạo: Th3 20, 2026 lúc 04:19 AM
 -- Phiên bản máy phục vụ: 10.5.27-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -127,8 +127,21 @@ CREATE TABLE `tbl_booking` (
   `numChildren` int(11) DEFAULT 0,
   `totalPrice` decimal(12,2) DEFAULT NULL,
   `bookingStatus` char(1) DEFAULT NULL COMMENT 'b=new, f=finished, c=cancelled, y=paid',
-  `bookingDate` timestamp NOT NULL DEFAULT current_timestamp()
+  `bookingDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `address` varchar(255) DEFAULT NULL,
+  `fullName` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phoneNumber` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `tbl_booking`
+--
+
+INSERT INTO `tbl_booking` (`bookingId`, `tourId`, `userId`, `numAdults`, `numChildren`, `totalPrice`, `bookingStatus`, `bookingDate`, `address`, `fullName`, `email`, `phoneNumber`) VALUES
+(1, 4, 1, 0, 0, NULL, 'c', '2026-03-20 01:01:24', NULL, NULL, NULL, NULL),
+(2, 4, 1, 0, 0, NULL, NULL, '2026-03-20 01:23:50', NULL, NULL, NULL, NULL),
+(3, 4, 1, 0, 0, NULL, 'c', '2026-03-20 02:04:49', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -144,6 +157,15 @@ CREATE TABLE `tbl_checkout` (
   `amount` decimal(12,2) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `tbl_checkout`
+--
+
+INSERT INTO `tbl_checkout` (`checkoutId`, `bookingId`, `paymentMethod`, `paymentStatus`, `amount`, `created_at`) VALUES
+(1, 1, 'office-payment', 'n', 150000.00, '2026-03-20 01:01:24'),
+(2, 2, 'office-payment', 'n', 150000.00, '2026-03-20 01:23:50'),
+(3, 3, 'office-payment', 'n', 700000.00, '2026-03-20 02:04:49');
 
 -- --------------------------------------------------------
 
@@ -238,7 +260,7 @@ CREATE TABLE `tbl_tours` (
 
 INSERT INTO `tbl_tours` (`tourId`, `title`, `description`, `priceAdult`, `priceChild`, `time`, `duration`, `destination`, `domain`, `quantity`, `availability`, `startDate`, `endDate`) VALUES
 (3, 'ba', '<p>hello</p>', 150000.00, 50000.00, '4 ngày 3 đêm', NULL, 'tp đà nẵng', 'n', 100, 0, '2026-03-07', '2026-03-11'),
-(4, 'ba', '<p>helllo</p>', 150000.00, 50000.00, '4 ngày 3 đêm', NULL, 'tp đà nẵng', 'n', 10, 1, '2026-03-07', '2026-03-11'),
+(4, 'ba', '<p>helllo</p>', 150000.00, 50000.00, '4 ngày 3 đêm', NULL, 'tp đà nẵng', 'n', 2, 1, '2026-03-07', '2026-03-11'),
 (5, 'da', '<p>nha</p>', 150000.00, 100000.00, '4 ngày 3 đêm', NULL, 'tp đà nẵng', 'b', 15, 0, '2026-03-07', '2026-03-11');
 
 -- --------------------------------------------------------
@@ -268,7 +290,8 @@ CREATE TABLE `tbl_users` (
 --
 
 INSERT INTO `tbl_users` (`userId`, `username`, `password`, `email`, `google_id`, `activation_token`, `isActive`, `created_at`, `avatar`, `fullName`, `address`, `phoneNumber`, `status`) VALUES
-(1, 'a', 'e10adc3949ba59abbe56e057f20f883e', 'a@gmail.com', NULL, 'ulcTeRjDjLjxwmi0e22WGLnVUgzWDZ0TbkORFhbDFPWSwYPFQbuWrmvFQsqe', 'n', '2026-03-06 01:07:07', 'default.png', NULL, NULL, NULL, '');
+(1, 'a', 'e10adc3949ba59abbe56e057f20f883e', 'a@gmail.com', NULL, 'ulcTeRjDjLjxwmi0e22WGLnVUgzWDZ0TbkORFhbDFPWSwYPFQbuWrmvFQsqe', 'n', '2026-03-06 01:07:07', 'default.png', 'tue', 'ngu hanh son', 1264402926, ''),
+(2, 'b', 'e10adc3949ba59abbe56e057f20f883e', 'b@gmail.com', NULL, 'MpDDxyJCt6cNMpPWoOAPclBUbG1RFntlNLY6sx4gIvUD62QeVv1R6zHBnkDl', 'n', '2026-03-20 03:11:26', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -419,13 +442,13 @@ ALTER TABLE `tbl_admin`
 -- AUTO_INCREMENT cho bảng `tbl_booking`
 --
 ALTER TABLE `tbl_booking`
-  MODIFY `bookingId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bookingId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `tbl_checkout`
 --
 ALTER TABLE `tbl_checkout`
-  MODIFY `checkoutId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `checkoutId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `tbl_contact`
@@ -461,7 +484,7 @@ ALTER TABLE `tbl_tours`
 -- AUTO_INCREMENT cho bảng `tbl_users`
 --
 ALTER TABLE `tbl_users`
-  MODIFY `userId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `userId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `users`
