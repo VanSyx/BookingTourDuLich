@@ -140,7 +140,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ---
 
-## 📞 Contact
-If you have any questions or want to contribute, feel free to reach out:
-
 
