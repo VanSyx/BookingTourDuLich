@@ -66,7 +66,7 @@
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/dienakdz/travela.git
+   git clone https://github.com/VanSyx/BookingTourDuLich
    cd travela
    ```
 
@@ -143,8 +143,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## 📞 Contact
 If you have any questions or want to contribute, feel free to reach out:
 
-- **Email**: minhdien.dev@gmail.com
-- **GitHub Issues**: [Report Issues](https://github.com/dienakdz/travela/issues)
-
-Thank you for using Travela! We hope you enjoy your travel journey with us. ✈️ 🌟
 
