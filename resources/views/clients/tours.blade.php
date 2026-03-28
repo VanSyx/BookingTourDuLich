@@ -137,6 +137,11 @@
                                     value="5n4d">
                                 <label for="5ngay4dem">5 ngày 4 đêm</label>
                             </li>
+                             <li>
+                                <input class="form-check-input" type="radio" name="duration" id="6ngay5dem"
+                                    value="6n5d">
+                                <label for="6ngay5dem">6 ngày 5 đêm</label>
+                            </li>
                         </ul>
                     </div>
 

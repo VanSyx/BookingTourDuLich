@@ -72,26 +72,26 @@ class Tours extends Model
         $getTours = DB::table($this->table)
             ->leftJoin('tbl_reviews', 'tbl_tours.tourId', '=', 'tbl_reviews.tourId') // Join với bảng reviews
             ->select(
-                'tbl_tours.tourId',
-                'tbl_tours.title',
-                'tbl_tours.description',
-                'tbl_tours.priceAdult',
-                'tbl_tours.priceChild',
-                'tbl_tours.time',
-                'tbl_tours.destination',
-                'tbl_tours.quantity',
-                DB::raw('AVG(tbl_reviews.rating) as averageRating')
-            )
+            'tbl_tours.tourId',
+            'tbl_tours.title',
+            'tbl_tours.description',
+            'tbl_tours.priceAdult',
+            'tbl_tours.priceChild',
+            'tbl_tours.time',
+            'tbl_tours.destination',
+            'tbl_tours.quantity',
+            DB::raw('AVG(tbl_reviews.rating) as averageRating')
+        )
             ->groupBy(
-                'tbl_tours.tourId',
-                'tbl_tours.title',
-                'tbl_tours.description',
-                'tbl_tours.priceAdult',
-                'tbl_tours.priceChild',
-                'tbl_tours.time',
-                'tbl_tours.destination',
-                'tbl_tours.quantity'
-            );
+            'tbl_tours.tourId',
+            'tbl_tours.title',
+            'tbl_tours.description',
+            'tbl_tours.priceAdult',
+            'tbl_tours.priceChild',
+            'tbl_tours.time',
+            'tbl_tours.destination',
+            'tbl_tours.quantity'
+        );
         $getTours = $getTours->where('availability', 1);
 
         if (!empty($filters)) {
@@ -270,28 +270,28 @@ class Tours extends Model
     {
         $toursPopular = DB::table('tbl_booking')
             ->select(
-                'tbl_tours.tourId',
-                'tbl_tours.title',
-                'tbl_tours.description',
-                'tbl_tours.priceAdult',
-                'tbl_tours.priceChild',
-                'tbl_tours.time',
-                'tbl_tours.destination',
-                'tbl_tours.quantity',
-                DB::raw('COUNT(tbl_booking.tourId) as totalBookings')
-            )
+            'tbl_tours.tourId',
+            'tbl_tours.title',
+            'tbl_tours.description',
+            'tbl_tours.priceAdult',
+            'tbl_tours.priceChild',
+            'tbl_tours.time',
+            'tbl_tours.destination',
+            'tbl_tours.quantity',
+            DB::raw('COUNT(tbl_booking.tourId) as totalBookings')
+        )
             ->join('tbl_tours', 'tbl_booking.tourId', '=', 'tbl_tours.tourId')
             ->where('tbl_booking.bookingStatus', 'f') // Chỉ lấy các booking đã hoàn thành
             ->groupBy(
-                'tbl_tours.tourId',
-                'tbl_tours.title',
-                'tbl_tours.description',
-                'tbl_tours.priceAdult',
-                'tbl_tours.priceChild',
-                'tbl_tours.time',
-                'tbl_tours.destination',
-                'tbl_tours.quantity'
-            )
+            'tbl_tours.tourId',
+            'tbl_tours.title',
+            'tbl_tours.description',
+            'tbl_tours.priceAdult',
+            'tbl_tours.priceChild',
+            'tbl_tours.time',
+            'tbl_tours.destination',
+            'tbl_tours.quantity'
+        )
             ->orderBy('totalBookings', 'DESC')
             ->take($quantity)
             ->get();

@@ -323,7 +323,7 @@ $(document).ready(function () {
         // Khởi tạo Dropzone
         Dropzone.autoDiscover = false; // Ngăn Dropzone tự động init
         dropzoneOldImages = new Dropzone("#myDropzone-listTour", {
-            url: "http://travela:8000/admin/add-temp-images", // URL upload ảnh
+            url: "/admin/add-temp-images", // Sử dụng relative URL thay vì hardcode hostname
             method: "post",
             paramName: "image",
             acceptedFiles: "image/*",
@@ -354,10 +354,10 @@ $(document).ready(function () {
 
     function loadOldImages(images) {
         images.forEach(function (image) {
-            let imageUrl = `/admin/assets/images/gallery-tours/${image.imageURL}`; // Tạo đường dẫn đầy đủ
+            let imageUrl = `/admin/assets/images/gallery-tours/${image.imageUrl}`; // Tạo đường dẫn đầy đủ
 
             let mockFile = {
-                name: image.imageURL, // Tên tệp ảnh
+                name: image.imageUrl, // Tên tệp ảnh
                 url: imageUrl, // Đường dẫn đầy đủ
                 status: "accepted", // Đặt trạng thái của file là 'accepted'
             };

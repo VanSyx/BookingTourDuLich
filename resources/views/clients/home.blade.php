@@ -26,7 +26,6 @@
                             <div class="ratting"><i class="fas fa-star"></i> {{ number_format($tour->rating, 1) }}</div>
                             <a href="#" class="heart"><i class="fas fa-heart"></i></a>
                             <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tour->images[0] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}" alt="Tour List">
-                                alt="Destination">
                         </div>
                         <div class="content">
                             <span class="location"><i class="fal fa-map-marker-alt"></i>{{ $tour->destination }}</span>

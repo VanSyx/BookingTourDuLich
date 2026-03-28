@@ -39,7 +39,7 @@
                             <div class="content">
                                 <h5>Cần trợ giúp và hỗ trợ</h5>
                                 <div class="text"><i class="far fa-envelope"></i> <a
-                                        href="mailto:minhdien.dev@gmail.com">minhdien.dev@gmail.com</a></div>
+                                        href="mailto:admin@gmail.com">admin@gmail.com</a></div>
                             </div>
                         </div>
                     </div>
@@ -59,8 +59,8 @@
                             data-aos-delay="50">
                             <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
                             <div class="content">
-                                <h5>Gia Lai</h5>
-                                <div class="text"><i class="fal fa-map-marker-alt"></i> Cửu An, An Khê, Gia Lai</div>
+                                <h5>Đà Nẵng</h5>
+                                <div class="text"><i class="fal fa-map-marker-alt"></i> Hải Châu, Tp.Đà Nẵng</div>
                             </div>
                         </div>
                     </div>
@@ -69,10 +69,8 @@
                             data-aos-delay="100">
                             <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
                             <div class="content">
-                                <h5>Kí túc xá Việt Hàn</h5>
-                                <div class="text"><i class="fal fa-map-marker-alt"></i> 470 Trần Đại Nghĩa, Ngũ Hành
-                                    Sơn,
-                                    Thành phố Đà Nẵng</div>
+                                <h5>Trường Đại học Kiến Trúc Đà Nẵng</h5>
+                                <div class="text"><i class="fal fa-map-marker-alt"></i> 566 Núi Thành, Hoà Cường Nam, Hòa Cường, Đà Nẵng, Việt Nam</div>
                             </div>
                         </div>
                     </div>

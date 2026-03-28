@@ -146,20 +146,31 @@ $(document).ready(function () {
                 url: $(this).attr("action"),
                 data: formData,
                 success: function (response) {
-                    if (response.success) {
-                        toastr.success(response.message, { timeOut: 5000 });
-                    } else {
-                        toastr.error(response.message);
-                    }
                     $("#register-form")
                         .removeClass("hidden-content")
                         .trigger("reset");
                     $(".loader").hide();
+                    if (response.success) {
+                        toastr.success(response.message);
+                        // Chuyển sang màn hình đăng nhập sau 2 giây
+                        setTimeout(function () {
+                            $(".signup").hide();
+                            $(".sign-in").show();
+                        }, 2000);
+                    } else {
+                        toastr.error(response.message);
+                    }
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    $("#register-form").removeClass("hidden-content");
+                    $(".loader").hide();
                     toastr.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
                 },
             });
+        } else {
+            // Validation thất bại — khôi phục loader và form
+            $("#register-form").removeClass("hidden-content");
+            $(".loader").hide();
         }
     });
 

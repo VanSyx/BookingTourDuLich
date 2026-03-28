@@ -114,7 +114,7 @@ class ToursManagementController extends Controller
             // Tạo dữ liệu để lưu vào cơ sở dữ liệu
             $dataUpload = [
                 'tourId' => $tourId,
-                'imageURL' => $filename,
+                'imageUrl' => $filename,
                 'description' => $originalName
             ];
 
@@ -134,7 +134,8 @@ class ToursManagementController extends Controller
             }
 
             return response()->json(['success' => false, 'message' => 'Failed to save image data'], 500);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Xử lý lỗi bất ngờ
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -203,7 +204,8 @@ class ToursManagementController extends Controller
                 'images' => $getImages,
                 'timeline' => $getTimeLine
             ]);
-        } else {
+        }
+        else {
             return response()->json([
                 'success' => false,
             ]);
@@ -259,7 +261,8 @@ class ToursManagementController extends Controller
             }
 
             return response()->json(['success' => false, 'message' => 'Failed to save image data'], 500);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Xử lý lỗi bất ngờ
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -277,13 +280,13 @@ class ToursManagementController extends Controller
         $description = $request->input('description');
 
         $dataTours = [
-            'title'       => $name,
+            'title' => $name,
             'description' => $description,
-            'quantity'    => $quantity,
-            'priceAdult'  => $price_adult,
-            'priceChild'  => $price_child,
+            'quantity' => $quantity,
+            'priceAdult' => $price_adult,
+            'priceChild' => $price_child,
             'destination' => $destination,
-            'domain'      => $domain,
+            'domain' => $domain,
         ];
 
         $delete_timeline = $this->tours->deleteData($tourId, 'tbl_timeline');
@@ -292,14 +295,14 @@ class ToursManagementController extends Controller
         $updateTour = $this->tours->updateTour($tourId, $dataTours);
 
         // Tạo mảng tạm để lưu tên ảnh
-        $images = $request->input('images');  // Mảng các tên ảnh gửi lên từ request
+        $images = $request->input('images'); // Mảng các tên ảnh gửi lên từ request
 
         if ($images && is_array($images)) {
             foreach ($images as $image) {
                 $dataUpload = [
                     'tourId' => $tourId,
-                    'imageURL' => $image, 
-                    'description' => $name  
+                    'imageURL' => $image,
+                    'description' => $name
                 ];
                 $this->tours->uploadImages($dataUpload);
             }
@@ -315,7 +318,7 @@ class ToursManagementController extends Controller
                     'description' => $timeline['itinerary']
                 ];
 
-                $this->tours->addTimeLine($data);  // Gọi phương thức addTimeLine()
+                $this->tours->addTimeLine($data); // Gọi phương thức addTimeLine()
             }
         }
 
@@ -339,7 +342,8 @@ class ToursManagementController extends Controller
                 'message' => $result['message'],
                 'data' => view('admin.partials.list-tours', compact('tours'))->render()
             ]);
-        } else {
+        }
+        else {
             return response()->json([
                 'success' => false,
                 'message' => $result['message']

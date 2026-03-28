@@ -37,7 +37,7 @@ class ToursController extends Controller
         }
         $toursPopular = $this->tours->toursPopular(2);
 
-        return view('clients.tours', compact('title', 'tours', 'domainsCount','toursPopular'));
+        return view('clients.tours', compact('title', 'tours', 'domainsCount', 'toursPopular'));
     }
 
     //Xử lý filter tours
@@ -63,7 +63,7 @@ class ToursController extends Controller
 
         // Handle star rating filter
         if ($req->filled('star')) {
-            $star = (int) $req->star;
+            $star = (int)$req->star;
             $conditions[] = ['averageRating', '=', $star];
         }
 
@@ -73,7 +73,8 @@ class ToursController extends Controller
             $time = [
                 '3n2d' => '3 ngày 2 đêm',
                 '4n3d' => '4 ngày 3 đêm',
-                '5n4d' => '5 ngày 4 đêm'
+                '5n4d' => '5 ngày 4 đêm',
+                '6n5d' => '6 ngày 5 đêm'
             ];
             $conditions[] = ['time', '=', $time[$duration]];
         }
@@ -85,11 +86,14 @@ class ToursController extends Controller
             // Handle sorting options
             if ($sortingOption == 'new') {
                 $sorting = ['tourId', 'DESC']; // Sort by creation date, newest first
-            } elseif ($sortingOption == 'old') {
+            }
+            elseif ($sortingOption == 'old') {
                 $sorting = ['tourId', 'ASC']; // Sort by creation date, oldest first
-            } elseif ($sortingOption == "hight-to-low") {
+            }
+            elseif ($sortingOption == "hight-to-low") {
                 $sorting = ['priceAdult', 'DESC']; // Sort by price in descending order
-            } elseif ($sortingOption == "low-to-high") {
+            }
+            elseif ($sortingOption == "low-to-high") {
                 $sorting = ['priceAdult', 'ASC']; // Sort by price in ascending order
             }
         }
@@ -105,8 +109,8 @@ class ToursController extends Controller
                 count($tours), // Total items
                 9, // Per page
                 1, // Current page
-                ['path' => url()->current()] // Path for pagination
-            );
+            ['path' => url()->current()] // Path for pagination
+                );
         }
 
         return view('clients.partials.filter-tours', compact('tours'));

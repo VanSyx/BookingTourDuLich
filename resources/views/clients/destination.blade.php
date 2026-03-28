@@ -33,7 +33,6 @@
                         <div class="image" style="max-height: 250px">
                             <a href="#" class="heart"><i class="fas fa-heart"></i></a>
                             <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tour->images[0] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}" alt="Tour List">
-                                alt="Destination">
                         </div>
                         <div class="content">
                             <h6 class="tour-title"><a
