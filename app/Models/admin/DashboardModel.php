@@ -75,10 +75,11 @@ class DashboardModel extends Model
 
     public function getRevenuePerMonth()
     {
-        $monthlyRevenue = DB::table('tbl_booking')
-            ->select(DB::raw('MONTH(bookingDate) as month, SUM(totalPrice) as revenue'))
-            ->where('bookingStatus', 'y')
-            ->groupBy(DB::raw('MONTH(bookingDate)'))
+        $monthlyRevenue = DB::table('tbl_checkout')
+            ->join('tbl_booking', 'tbl_checkout.bookingId', '=', 'tbl_booking.bookingId')
+            ->select(DB::raw('MONTH(tbl_booking.bookingDate) as month, SUM(tbl_checkout.amount) as revenue'))
+            ->where('tbl_checkout.paymentStatus', 'y')
+            ->groupBy(DB::raw('MONTH(tbl_booking.bookingDate)'))
             ->orderBy('month', 'asc')
             ->get();
 

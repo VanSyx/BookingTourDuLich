@@ -377,3 +377,93 @@
     text-overflow: ellipsis; /* Thêm dấu ba chấm vào cuối */
     word-break: break-word; /* Đảm bảo từ không bị tràn ra ngoài */
 }
+
+/****************************************
+*        REGISTER SUCCESS POPUP         *
+* ***************************************/
+.register-success-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55);
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+}
+
+.register-success-overlay.show {
+    display: flex;
+}
+
+.register-success-popup {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: popupScaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popupScaleIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.register-success-popup .popup-icon {
+    margin-bottom: 16px;
+}
+
+.register-success-popup .popup-icon i {
+    font-size: 72px;
+    color: #63ab45;
+}
+
+.register-success-popup .popup-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 10px;
+}
+
+.register-success-popup .popup-message {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.register-success-popup .popup-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    background-color: #63ab45;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.register-success-popup .popup-btn:hover {
+    background-color: #529938;
+    transform: translateY(-2px);
+}
+
+.register-success-popup .popup-btn:active {
+    transform: translateY(0);
+}
+

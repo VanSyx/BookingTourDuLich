@@ -92,6 +92,6 @@ class PayPalController extends Controller
     {
         return redirect()
             ->route('createTransaction')
-            ->with('error', $response['message'] ?? 'You have canceled the transaction.');
+            ->with('error', 'Bạn đã hủy giao dịch.');
     }
 }

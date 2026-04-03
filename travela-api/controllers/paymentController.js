@@ -44,20 +44,70 @@ const PaymentController = {
 
   /**
    * GET /api/payments/momo/callback
-   * Xử lý callback từ MoMo
+   * ✅ FIXED: Xử lý callback từ MoMo + Update DB
    */
   momoCallback: async (req, res) => {
     try {
       const { resultCode, transId } = req.query;
-
-      if (resultCode === '0') {
-        return sendSuccess(res, 'Thanh toán MoMo thành công.', { transactionId: transId });
-      } else {
-        return sendError(res, 'Thanh toán MoMo thất bại.', 400);
+      
+      // ✅ STEP 1: Validate input
+      if (!transId) {
+        return sendError(res, 'Thiếu transactionId.', 400);
       }
+      
+      // ✅ STEP 2: Import models
+      const CheckoutModel = require('../models/checkoutModel');
+      const BookingModel = require('../models/bookingModel');
+      
+      // ✅ STEP 3: Find the checkout record by transactionId
+      const checkout = await CheckoutModel.getByTransactionId(transId);
+      
+      if (!checkout) {
+        console.warn(`MomoCallback: Transaction ${transId} not found in database`);
+        return sendError(res, 'Không tìm thấy giao dịch này trong hệ thống.', 404);
+      }
+      
+      // ✅ STEP 4: Determine payment status based on resultCode
+      let paymentStatus = 'n'; // default: unpaid
+      let successMessage = '';
+      
+      if (resultCode === '0') {
+        // MoMo payment successful
+        paymentStatus = 'y'; // mark as paid
+        successMessage = 'Thanh toán MoMo thành công! Booking của bạn đã được xác nhận.';
+      } else {
+        successMessage = 'Thanh toán MoMo thất bại. Vui lòng thử lại.';
+      }
+      
+      // ✅ STEP 5: Update payment status in database
+      const updated = await CheckoutModel.updatePaymentStatus(
+        checkout.bookingId, 
+        paymentStatus
+      );
+      
+      if (!updated) {
+        console.error(`MomoCallback: Failed to update payment status for booking ${checkout.bookingId}`);
+        return sendError(res, 'Lỗi cập nhật trạng thái thanh toán. Vui lòng liên hệ support.', 500);
+      }
+      
+      // ✅ STEP 6: Get booking info to return
+      const booking = await BookingModel.getById(checkout.bookingId);
+      
+      // ✅ STEP 7: Return response
+      if (paymentStatus === 'y') {
+        return sendSuccess(res, successMessage, {
+          bookingId: checkout.bookingId,
+          bookingStatus: booking ? booking.bookingStatus : 'b',
+          transactionId: transId,
+          paymentStatus: 'y'
+        });
+      } else {
+        return sendError(res, successMessage, 400);
+      }
+      
     } catch (error) {
       console.error('MomoCallback error:', error);
-      return sendError(res, 'Có lỗi xảy ra.', 500);
+      return sendError(res, 'Có lỗi xảy ra khi xử lý callback. Vui lòng liên hệ support.', 500);
     }
   }
 };

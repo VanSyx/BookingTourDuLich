@@ -54,8 +54,21 @@ const BookingController = {
         amount: totalPrice,
         paymentStatus: (paymentMethod === 'paypal-payment' || paymentMethod === 'momo-payment') ? 'y' : 'n'
       };
+
+      // ✅ SET TRANSACTION ID
       if (transactionId) {
         checkoutData.transactionId = transactionId;
+      } else if (paymentMethod === 'cash' || paymentMethod === 'office') {
+        // ✅ Generate reference code for cash payment
+        // Format: CASH-20260402120530-12345
+        const now = new Date();
+        const timestamp = now.getFullYear().toString() +
+                         String(now.getMonth() + 1).padStart(2, '0') +
+                         String(now.getDate()).padStart(2, '0') +
+                         String(now.getHours()).padStart(2, '0') +
+                         String(now.getMinutes()).padStart(2, '0') +
+                         String(now.getSeconds()).padStart(2, '0');
+        checkoutData.transactionId = `CASH-${timestamp}-${bookingId}`;
       }
 
       const checkoutId = await CheckoutModel.create(checkoutData);
@@ -109,7 +122,7 @@ const BookingController = {
 
   /**
    * POST /api/bookings/:id/cancel
-   * Hủy booking (trả lại số lượng chỗ)
+   * Hủy booking với các kiểm tra an toàn
    * Body: { tourId, numAdults, numChildren }
    */
   cancel: async (req, res) => {
@@ -117,27 +130,65 @@ const BookingController = {
       const bookingId = Number(req.params.id);
       const { tourId, numAdults, numChildren } = req.body;
 
-      // Lấy tour hiện tại
+      // ✅ STEP 1: Validate input
+      if (!tourId || numAdults === undefined || numChildren === undefined) {
+        return sendError(res, 'Lỗi: Thông tin không đầy đủ.', 400);
+      }
+
+      // ✅ STEP 2: Get booking details
+      const booking = await BookingModel.getById(bookingId);
+      if (!booking) {
+        return sendError(res, 'Không tìm thấy đơn đặt tour.', 404);
+      }
+
+      // ✅ STEP 3: Check booking status - only 'b' (new) can be cancelled
+      if (booking.bookingStatus !== 'b') {
+        return sendError(res,
+          `Không thể hủy booking với trạng thái '${booking.bookingStatus}'. Chỉ booking mới (chưa xác nhận) mới có thể hủy.`,
+          400);
+      }
+
+      // ✅ STEP 4: Check if tour has started
       const tour = await TourModel.getById(tourId);
       if (!tour) {
         return sendError(res, 'Không tìm thấy tour.', 404);
       }
 
-      // Hủy booking
-      const cancelled = await BookingModel.cancel(bookingId);
-      if (!cancelled) {
-        return sendError(res, 'Có lỗi xảy ra khi hủy.', 500);
+      const tourStartDate = new Date(tour.startDate);
+      const now = new Date();
+      if (tourStartDate <= now) {
+        return sendError(res, 'Không thể hủy tour đã khởi hành.', 400);
       }
 
-      // Trả lại số lượng chỗ
+      // ✅ STEP 5: Check payment status (warning for refund needed)
+      const checkout = await CheckoutModel.getByBookingId(bookingId);
+      if (checkout && checkout.paymentStatus === 'y') {
+        // TODO: Implement full refund logic in future
+        console.warn(`[REFUND NEEDED] BookingId: ${bookingId}, Amount: ${checkout.amount}, Method: ${checkout.paymentMethod}`);
+        // For now: notify support team
+        // In future: auto-refund via PayPal/MoMo API
+      }
+
+      // ✅ STEP 6: Cancel booking (update status to 'c')
+      const cancelled = await BookingModel.cancel(bookingId);
+      if (!cancelled) {
+        return sendError(res, 'Có lỗi xảy ra khi hủy đơn đặt.', 500);
+      }
+
+      // ✅ STEP 7: Return seats to tour
       const returnQuantity = (Number(numAdults) || 0) + (Number(numChildren) || 0);
       await TourModel.updateQuantity(tourId, tour.quantity + returnQuantity);
 
-      return sendSuccess(res, 'Hủy booking thành công!');
+      // ✅ STEP 8: Success response
+      return sendSuccess(res, 'Hủy đơn đặt tour thành công! Ghế của bạn đã được hoàn lại.', {
+        bookingId,
+        seatsReturned: returnQuantity,
+        newTourQuantity: tour.quantity + returnQuantity
+      });
 
     } catch (error) {
       console.error('CancelBooking error:', error);
-      return sendError(res, 'Có lỗi xảy ra khi hủy.', 500);
+      return sendError(res, 'Có lỗi xảy ra khi hủy đơn đặt.', 500);
     }
   },
 

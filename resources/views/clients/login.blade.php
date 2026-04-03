@@ -88,4 +88,19 @@
 
     </div>
 </div>
+
+<!-- Popup xác nhận đăng ký thành công -->
+<div class="register-success-overlay" id="registerSuccessOverlay">
+    <div class="register-success-popup" id="registerSuccessPopup">
+        <div class="popup-icon">
+            <i class="zmdi zmdi-check-circle"></i>
+        </div>
+        <h3 class="popup-title">Đăng ký thành công!</h3>
+        <p class="popup-message" id="registerSuccessMessage"></p>
+        <button type="button" class="popup-btn" id="btnGoToLogin">
+            <i class="zmdi zmdi-arrow-right"></i> Đăng nhập ngay
+        </button>
+    </div>
+</div>
+
 @include('clients.blocks.footer')

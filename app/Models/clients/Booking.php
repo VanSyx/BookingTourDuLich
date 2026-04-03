@@ -33,4 +33,17 @@ class Booking extends Model
         ->where('bookingStatus', 'f')
         ->exists(); // Trả về true nếu bản ghi tồn tại, false nếu không tồn tại
     }
+
+    /**
+     * Kiểm tra user đã có booking đang active (chờ xử lý 'b' hoặc đã xác nhận 'y') cho tour này chưa.
+     * Nếu có → không được đặt lại.
+     */
+    public function hasActiveBooking($tourId, $userId)
+    {
+        return DB::table($this->table)
+            ->where('tourId', $tourId)
+            ->where('userId', $userId)
+            ->whereIn('bookingStatus', ['b', 'y'])
+            ->exists();
+    }
 }

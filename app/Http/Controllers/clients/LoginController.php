@@ -8,6 +8,8 @@ use App\Models\clients\Login;
 use App\Models\clients\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -29,46 +31,75 @@ class LoginController extends Controller
 
     public function register(Request $request)
     {
-        $username_regis = $request->username_regis;
-        $email = $request->email;
-        $password_regis = $request->password_regis;
+        try {
+            $username_regis = $request->username_regis;
+            $email = $request->email;
+            $password_regis = $request->password_regis;
 
-        $checkAccountExist = $this->login->checkUserExist($username_regis, $email);
-        if ($checkAccountExist) {
+            $checkAccountExist = $this->login->checkUserExist($username_regis, $email);
+            if ($checkAccountExist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tên người dùng hoặc email đã tồn tại!'
+                ]);
+            }
+
+            $activation_token = Str::random(60);
+            
+            // ✅ USE DATABASE TRANSACTION
+            return DB::transaction(function () use ($username_regis, $email, $password_regis, $activation_token) {
+                // Lưu dữ liệu vào database
+                $dataInsert = [
+                    'username'         => $username_regis,
+                    'email'            => $email,
+                    'password'         => md5($password_regis),
+                    'activation_token' => $activation_token
+                ];
+
+                $this->login->registerAcount($dataInsert);
+
+                // ✅ GỬI EMAIL VỚI ERROR HANDLING
+                $this->sendActivationEmail($email, $activation_token);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.'
+                ]);
+            });
+            
+        } catch (\Exception $e) {
+            // ✅ LOG LỖI ĐỂ DEBUG
+            Log::error('Register Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            // Trả về lỗi thích hợp
             return response()->json([
                 'success' => false,
-                'message' => 'Tên người dùng hoặc email đã tồn tại!'
-            ]);
+                'message' => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.'
+            ], 500);
         }
-
-        $activation_token = Str::random(60); // Tạo token ngẫu nhiên
-        // Nếu không tồn tại, thực hiện đăng ký
-        $dataInsert = [
-            'username'         => $username_regis,
-            'email'            => $email,
-            'password'         => md5($password_regis),
-            'activation_token' => $activation_token
-        ];
-
-        $this->login->registerAcount($dataInsert);
-
-        // Gửi email kích hoạt
-        $this->sendActivationEmail($email, $activation_token);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.'
-        ]);
     }
 
     public function sendActivationEmail($email, $token)
     {
-        $activation_link = route('activate.account', ['token' => $token]);
+        try {
+            $activation_link = route('activate.account', ['token' => $token]);
 
-        Mail::send('clients.mail.emails_activation', ['link' => $activation_link], function ($message) use ($email) {
-            $message->to($email);
-            $message->subject('Kích hoạt tài khoản của bạn');
-        });
+            Mail::send('clients.mail.emails_activation', ['link' => $activation_link], function ($message) use ($email) {
+                $message->to($email);
+                $message->subject('Kích hoạt tài khoản của bạn');
+            });
+        } catch (\Exception $e) {
+            Log::error('Send Email Error', [
+                'email' => $email,
+                'message' => $e->getMessage()
+            ]);
+            
+            throw new \Exception('Không thể gửi email kích hoạt. Vui lòng liên hệ hỗ trợ.');
+        }
     }
 
     public function activateAccount($token)

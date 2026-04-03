@@ -32,6 +32,19 @@ const CheckoutModel = {
       [status, bookingId]
     );
     return result.affectedRows;
+  },
+
+  /**
+   * ✅ NEW: Lấy checkout theo transactionId
+   * Dùng cho MoMo callback lookup
+   */
+  getByTransactionId: async (transactionId) => {
+    if (!transactionId) return null;
+    const [rows] = await pool.query(
+      'SELECT * FROM tbl_checkout WHERE transactionId = ?', 
+      [transactionId]
+    );
+    return rows[0] || null;
   }
 };
 

@@ -158,5 +158,16 @@
     </form>
 </section>
 
+<!-- ✅ NEW: PayPal SDK Script -->
+@if (!empty($paypalClientId))
+<script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD"></script>
+<script>
+    console.log("✅ PayPal SDK loaded with Client ID");
+</script>
+@else
+<script>
+    console.warn("⚠️ PayPal Client ID not configured. PayPal payment will not work.");
+</script>
+@endif
 
 @include('clients.blocks.footer')

@@ -134,8 +134,7 @@ class ToursManagementController extends Controller
             }
 
             return response()->json(['success' => false, 'message' => 'Failed to save image data'], 500);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             // Xử lý lỗi bất ngờ
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -204,8 +203,7 @@ class ToursManagementController extends Controller
                 'images' => $getImages,
                 'timeline' => $getTimeLine
             ]);
-        }
-        else {
+        } else {
             return response()->json([
                 'success' => false,
             ]);
@@ -261,8 +259,7 @@ class ToursManagementController extends Controller
             }
 
             return response()->json(['success' => false, 'message' => 'Failed to save image data'], 500);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             // Xử lý lỗi bất ngờ
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -301,7 +298,7 @@ class ToursManagementController extends Controller
             foreach ($images as $image) {
                 $dataUpload = [
                     'tourId' => $tourId,
-                    'imageURL' => $image,
+                    'imageUrl' => $image,
                     'description' => $name
                 ];
                 $this->tours->uploadImages($dataUpload);
@@ -342,8 +339,7 @@ class ToursManagementController extends Controller
                 'message' => $result['message'],
                 'data' => view('admin.partials.list-tours', compact('tours'))->render()
             ]);
-        }
-        else {
+        } else {
             return response()->json([
                 'success' => false,
                 'message' => $result['message']
