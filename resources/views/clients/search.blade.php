@@ -9,7 +9,7 @@
             @else
                 @foreach ($tours as $tour)
                     <div class="col-xl-4 col-md-6" style="margin-bottom: 30px">
-                        <div class="destination-item tour-grid style-three bgc-lighter equal-block-fix" data-aos="fade-up"
+                        <div class="destination-item tour-grid style-three bgc-lighter equal-block-fix h-100 d-flex flex-column" data-aos="fade-up"
                             data-aos-duration="1500" data-aos-offset="50">
                             <div class="image">
                                 <a href="#" class="heart"><i class="fas fa-heart"></i></a>
@@ -20,7 +20,7 @@
                                     <img src="{{ asset('admin/assets/images/no-image.jpg') }}" alt="No Image Available">
                                 @endif
                             </div>
-                            <div class="content equal-content-fix">
+                            <div class="content equal-content-fix d-flex flex-column flex-grow-1">
                                 <div class="destination-header">
                                     <span class="location"><i class="fal fa-map-marker-alt"></i>
                                         {{ $tour->destination }}</span>
@@ -41,7 +41,7 @@
                                     <li><i class="far fa-clock"></i>{{ $tour->time }}</li>
                                     <li><i class="far fa-user"></i>{{ $tour->quantity }}</li>
                                 </ul>
-                                <div class="destination-footer">
+                                <div class="destination-footer mt-auto">
                                     <span
                                         class="price"><span>{{ number_format($tour->priceAdult, 0, ',', '.') }}</span>
                                         VND / người</span>

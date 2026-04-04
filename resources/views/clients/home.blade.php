@@ -20,20 +20,20 @@
         <div class="row justify-content-center">
             @foreach ($tours as $tour)
                 <div class="col-xxl-3 col-xl-4 col-md-6" style="margin-bottom: 30px">
-                    <div class="destination-item block_tours" data-aos="fade-up" data-aos-duration="1500"
+                    <div class="destination-item block_tours h-100 d-flex flex-column" data-aos="fade-up" data-aos-duration="1500"
                         data-aos-offset="50">
                         <div class="image">
                             <div class="ratting"><i class="fas fa-star"></i> {{ number_format($tour->rating, 1) }}</div>
                             <a href="#" class="heart"><i class="fas fa-heart"></i></a>
                             <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tour->images[0] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}" alt="Tour List">
                         </div>
-                        <div class="content">
+                        <div class="content d-flex flex-column flex-grow-1">
                             <span class="location"><i class="fal fa-map-marker-alt"></i>{{ $tour->destination }}</span>
                             <h5><a href="{{ route('tour-detail', ['id' => $tour->tourId]) }}">{{ $tour->title }}</a>
                             </h5>
                             <span class="time">{{ $tour->time }}</span>
                         </div>
-                        <div class="destination-footer">
+                        <div class="destination-footer mt-auto">
                             <span class="price"><span>{{ number_format($tour->priceAdult, 0, ',', '.') }}</span> VND /
                                 người</span>
                             <a href="{{ route('tour-detail', ['id' => $tour->tourId]) }}" class="read-more">Đặt ngay <i

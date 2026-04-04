@@ -1,3 +1,10 @@
+/* Tái định nghĩa lại bộ font cho toàn dự án vào thẻ root (CSS thuần) */
+:root, body {
+    --base-font: 'Crimson Pro', serif !important;
+    --heading-font: 'Crimson Pro', serif !important;
+    font-family: var(--base-font) !important;
+}
+
 .datetimepicker-custom {
     padding: 0;
 }

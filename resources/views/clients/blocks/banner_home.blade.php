@@ -4,7 +4,7 @@
         <h1 class="hero-title" data-aos="flip-up" data-aos-delay="50" data-aos-duration="1500" data-aos-offset="50">
             Tours Du Lịch</h1>
         <div class="main-hero-image bgs-cover"
-            style="background-image: url({{ asset('clients/assets/images/hero/hero.jpg') }});">
+            style="background-image: url({{ asset('clients/assets/images/hero/joshua-earle--87JyMb9ZfU-unsplash.jpg') }});">
         </div>
     </div>
     <form action="{{ route('search') }}" method="GET" id="search_form">
@@ -31,7 +31,7 @@
                         <option value="la">Lào Cai (Sa Pa)</option>
                         <option value="bd">Bình Định (Quy Nhơn)</option>
                     </select>
-                    
+
                 </div>
                 <div class="filter-item clearfix">
                     <div class="icon"><i class="fal fa-calendar-alt"></i></div>
