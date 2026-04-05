@@ -459,6 +459,11 @@ $(document).ready(function () {
 
     $(document).on("click", ".delete-tour", function (e) {
         e.preventDefault();
+
+        if (!confirm("Bạn có chắc chắn muốn xóa tour này không? Tất cả dữ liệu liên quan đến tour sẽ bị xóa và thao tác này không thể hoàn tác!")) {
+            return false;
+        }
+
         var tourId = $(this).data("tourid");
         var urlDelete = $(this).attr("href");
 
@@ -517,7 +522,14 @@ $(document).ready(function () {
             `;
 
         // Thêm vào div#step-3
-        $("#step-3").append(timelineEntry);
+        // Sửa lại: Nếu có nút Thêm timeline thì chèn trước nó, thay vì dồn append xuống dưới cùng.
+        if ($(".add-timeline-wrapper").length > 0) {
+            $(timelineEntry).insertBefore(".add-timeline-wrapper");
+        } else if ($("#add-timeline").length > 0) {
+            $(timelineEntry).insertBefore("#add-timeline");
+        } else {
+            $("#step-3").append(timelineEntry);
+        }
 
         // Khởi tạo CKEditor cho textarea vừa thêm
         if ($(`#itinerary-${timelineCounter}`).length) {
@@ -540,7 +552,11 @@ $(document).ready(function () {
     });
 
     // Thêm nút thêm timeline vào div#step-3
-    const addButton = `<button type="button" id="add-timeline" class="btn btn-round btn-info" style="margin-top: 20px;">Thêm Timeline</button>`;
+    // Bọc trong thẻ div sticky để giữ vị trí luôn ở dưới cùng màn hình (hoặc container) khi cuộn chuột
+    const addButton = `
+        <div class="add-timeline-wrapper" style="position: sticky; bottom: 0; z-index: 100; text-align: left; padding: 10px 0; background: #fff; margin-top: 20px; border-top: 1px solid #e5e5e5; box-shadow: 0 -2px 5px rgba(0,0,0,0.05);">
+            <button type="button" id="add-timeline" class="btn btn-round btn-info"><i class="fa fa-plus"></i> Thêm Timeline</button>
+        </div>`;
     $("#step-3").append(addButton);
 
     // Thêm timeline đầu tiên khi trang tải xong
@@ -584,8 +600,12 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (response.success) {
-                    $("#tbody-booking").html(response.data);
-                    $(".confirm-booking").remove();
+                    if ($("#tbody-booking").length) {
+                        $("#tbody-booking").html(response.data);
+                        $(".confirm-booking").remove();
+                    } else {
+                        setTimeout(() => location.reload(), 800);
+                    }
                     toastr.success(response.message);
                 } else {
                     toastr.error(response.message);
@@ -615,8 +635,12 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (response.success) {
-                    $("#tbody-booking").html(response.data);
-                    $(".finish-booking").remove();
+                    if ($("#tbody-booking").length) {
+                        $("#tbody-booking").html(response.data);
+                        $(".finish-booking").remove();
+                    } else {
+                        setTimeout(() => location.reload(), 800);
+                    }
                     toastr.success(response.message);
                 } else {
                     toastr.error(response.message);
@@ -681,7 +705,11 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (response.success) {
-                    $("#received-money").remove();
+                    if ($("#tbody-booking").length) {
+                        $("#received-money").remove();
+                    } else {
+                        setTimeout(() => location.reload(), 800);
+                    }
                     toastr.success(response.message);
                 } else {
                     toastr.error(response.message);

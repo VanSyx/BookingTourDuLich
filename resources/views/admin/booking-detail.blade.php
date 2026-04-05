@@ -7,7 +7,7 @@
             <div class="">
                 <div class="page-title">
                     <div class="title_left">
-                        <h3>Hóa đơn <small>đặt tour du lịch</small></h3>
+                        <h3>Hóa đơn đặt tour du lịch</h3>
                     </div>
                 </div>
 
@@ -34,9 +34,9 @@
                                             <div class="  invoice-header">
                                                 <h3>
                                                     <img src="{{ asset('admin/assets/images/icon/icon_office.png') }}"
-                                                        alt=""
-                                                        style="margin-right: 10px">{{ $invoice_booking->title }}
-                                                    <small class="pull-right">Ngày:
+                                                        alt="" style="margin-right: 10px">{{ $invoice_booking->title }}
+
+                                                    <small class="pull-right" style="margin-left: 20px"> Ngày:
                                                         {{ date('d-m-Y', strtotime($invoice_booking->bookingDate)) }}</small>
                                                 </h3>
                                             </div>
@@ -50,7 +50,7 @@
                                                     <strong>{{ $invoice_booking->fullName }}</strong>
                                                     <br>{{ $invoice_booking->address }}
                                                     <br>Số điện thoại: {{ $invoice_booking->phoneNumber }}
-                                                    <br>Email:{{ $invoice_booking->email }}
+                                                    <br>Email: {{ $invoice_booking->email }}
                                                 </address>
                                             </div>
                                             <!-- /.col -->
@@ -58,10 +58,10 @@
                                                 Đến
                                                 <address>
                                                     <strong>Công ty Travela</strong>
-                                                    <br>470 Trần Đại Nghĩa
-                                                    <br>Ngũ Hành Sơn, Đà Nẵng
-                                                    <br>Phone: 1 (804) 123-9876
-                                                    <br>Email: minhdien.dev@gmail.com
+                                                    <br>566 Núi Thành
+                                                    <br>Hải Châu, Đà Nẵng
+                                                    <br>Phone: 0905 123 456
+                                                    <br>Email: admin@gmail.com
                                                 </address>
                                             </div>
                                             <!-- /.col -->
@@ -71,7 +71,8 @@
                                                 <br>
                                                 <b>Mã giao dịch:</b> {{ $invoice_booking->transactionId }}
                                                 <br>
-                                                <b>Ngày thanh toán:</b> {{ $invoice_booking->paymentDate }}
+                                                <b>Ngày thanh toán:</b>
+                                                {{ $invoice_booking->created_at ?? 'Đang chờ cập nhật' }}
                                                 <br>
                                                 <b>Tài khoản:</b> {{ $invoice_booking->userId }}
                                             </div>
@@ -141,7 +142,8 @@
                                             <!-- /.col -->
                                             <div class="col-md-6">
                                                 <p class="lead">Số tiền phải trả trước
-                                                    {{ date('d-m-Y', strtotime($invoice_booking->startDate)) }}</p>
+                                                    {{ date('d-m-Y', strtotime($invoice_booking->startDate)) }}
+                                                </p>
                                                 <div class="table-responsive">
                                                     <table class="table">
                                                         <tbody>
@@ -180,9 +182,9 @@
                                 <div class=" ">
                                     <button class="btn btn-default" onclick="window.print();"><i
                                             class="fa fa-print"></i> Print</button>
-                                    <button id="send-pdf-btn" data-bookingid= "{{ $invoice_booking->bookingId }}"
-                                        data-email={{ $invoice_booking->email }}
-                                        data-urlSendMail={{ route('admin.send.pdf') }}
+                                    <button id="send-pdf-btn" data-bookingid="{{ $invoice_booking->bookingId }}"
+                                        data-email="{{ $invoice_booking->email }}"
+                                        data-urlSendMail="{{ route('admin.send.pdf') }}"
                                         class="btn btn-primary pull-right" style="margin-right: 5px;"><i
                                             class="fa fa-send"></i> Gửi hóa đơn cho khách hàng</button>
                                     @if ($invoice_booking->bookingStatus == 'b')
@@ -191,8 +193,8 @@
                                             data-urlConfirm="{{ route('admin.confirm-booking') }}"><i
                                                 class="fa fa-credit-card"></i> Xác nhận</button>
                                     @endif
-                                    <button id="received-money" data-bookingid= "{{ $invoice_booking->bookingId }}"
-                                         data-urlPaid="{{ route('admin.received') }}"
+                                    <button id="received-money" data-bookingid="{{ $invoice_booking->bookingId }}"
+                                        data-urlPaid="{{ route('admin.received') }}"
                                         class="btn btn-info pull-right {{ $hide }}" style="margin-right: 5px;"><i
                                             class="glyphicon glyphicon-usd"></i> Đã thanh toán</button>
                                 </div>

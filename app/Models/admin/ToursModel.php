@@ -58,18 +58,26 @@ class ToursModel extends Model
             return ['success' => false, 'message' => 'Không thể xóa tour vì vẫn còn ' . $activeBooking . ' booking đang hoạt động.'];
         }
 
-        // Xóa các dữ liệu liên quan trong bảng 'tbl_timeline' và 'tbl_images'
-        DB::table('tbl_timeline')->where('tourId', $tourId)->delete();
-        DB::table('tbl_images')->where('tourId', $tourId)->delete();
-        DB::table('tbl_temp_images')->where('tourId', $tourId)->delete();
+        try {
+            // Xóa các dữ liệu liên quan trong bảng 'tbl_timeline', 'tbl_images', 'tbl_temp_images'
+            DB::table('tbl_timeline')->where('tourId', $tourId)->delete();
+            DB::table('tbl_images')->where('tourId', $tourId)->delete();
+            DB::table('tbl_temp_images')->where('tourId', $tourId)->delete();
 
-        $deleteTour = DB::table($this->table)->where('tourId', $tourId)->delete();
+            $deleteTour = DB::table($this->table)->where('tourId', $tourId)->delete();
 
-        // Trả về kết quả xóa tour
-        if ($deleteTour) {
-            return ['success' => true, 'message' => 'Tour đã được xóa thành công.'];
-        } else {
-            return ['success' => false, 'message' => 'Không thể xóa tour.'];
+            // Trả về kết quả xóa tour
+            if ($deleteTour) {
+                return ['success' => true, 'message' => 'Tour đã được xóa thành công.'];
+            } else {
+                return ['success' => false, 'message' => 'Không thể xóa tour.'];
+            }
+        } catch (\Exception $e) {
+            // Kiểm tra lỗi do dính dữ liệu khóa ngoại (ví dụ: đã từng có người đặt và hoàn thành)
+            if ($e->getCode() == 23000 || strpos($e->getMessage(), 'Constraint violation') !== false || strpos($e->getMessage(), 'foreign key') !== false) {
+                return ['success' => false, 'message' => 'Lỗi: Không thể xóa tour này vì đã có dữ liệu lịch sử đặt tour liên kết với nó!'];
+            }
+            return ['success' => false, 'message' => 'Đã xảy ra lỗi: ' . $e->getMessage()];
         }
     }
 

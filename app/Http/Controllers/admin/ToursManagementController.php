@@ -288,6 +288,7 @@ class ToursManagementController extends Controller
 
         $delete_timeline = $this->tours->deleteData($tourId, 'tbl_timeline');
         $delete_images = $this->tours->deleteData($tourId, 'tbl_images');
+        $delete_temp_images = $this->tours->deleteData($tourId, 'tbl_temp_images');
 
         $updateTour = $this->tours->updateTour($tourId, $dataTours);
 
