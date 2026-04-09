@@ -308,6 +308,64 @@ class Tours extends Model
         return $toursPopular;
     }
 
+    // ============ WISHLIST METHODS ============
+
+    // Kiểm tra tour đã được wishlist bởi user hay chưa
+    public function isWishlisted($tourId, $userId)
+    {
+        if (!$userId) return false;
+        return DB::table('tbl_wishlists')
+            ->where('tourId', $tourId)
+            ->where('userId', $userId)
+            ->exists();
+    }
+
+    // Toggle wishlist: thêm nếu chưa có, xoá nếu đã có
+    // Trả về 'added' hoặc 'removed'
+    public function toggleWishlist($tourId, $userId)
+    {
+        $exists = $this->isWishlisted($tourId, $userId);
+        if ($exists) {
+            DB::table('tbl_wishlists')
+                ->where('tourId', $tourId)
+                ->where('userId', $userId)
+                ->delete();
+            return 'removed';
+        } else {
+            DB::table('tbl_wishlists')->insert([
+                'tourId'     => $tourId,
+                'userId'     => $userId,
+                'created_at' => now(),
+            ]);
+            return 'added';
+        }
+    }
+
+    // Lấy danh sách tour đã wishlist của user
+    public function getWishlistByUser($userId)
+    {
+        $ids = DB::table('tbl_wishlists')
+            ->where('userId', $userId)
+            ->pluck('tourId')
+            ->toArray();
+
+        if (empty($ids)) return collect();
+
+        $tours = DB::table($this->table)
+            ->whereIn('tourId', $ids)
+            ->where('availability', 1)
+            ->get();
+
+        foreach ($tours as $tour) {
+            $tour->images = DB::table('tbl_images')
+                ->where('tourId', $tour->tourId)
+                ->pluck('imageUrl');
+            $tour->rating = $this->reviewStats($tour->tourId)->averageRating;
+        }
+
+        return $tours;
+    }
+
     //Get id search tours
     public function toursSearch($ids)
     {

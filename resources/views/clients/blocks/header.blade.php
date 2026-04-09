@@ -7,6 +7,7 @@
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Title -->
     <title>Travela - {{ $title }}</title>
@@ -148,6 +149,7 @@
                                         @if (session()->has('username'))
                                             <li><a href="{{ route('user-profile') }}">Thông tin cá nhân</a></li>
                                             <li><a href="{{ route('my-tours') }}">Tour đã đặt</a></li>
+                                            <li><a href="{{ route('my-wishlist') }}">Danh sách yêu thích</a></li>
                                             <li><a href="{{ route('logout') }}">Đăng xuất</a></li>
                                         @else
                                             <li><a href="{{ route('login') }}">Đăng nhập</a></li>

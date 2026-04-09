@@ -61,7 +61,10 @@ class TourDetailController extends Controller
         // dd($tourRecommendations);    
         // dd($avgStar);
 
-        return view('clients.tour-detail', compact('title', 'tourDetail', 'getReviews', 'avgStar', 'countReview', 'checkDisplay','tourRecommendations'));
+        // Kiểm tra tour đã được wishlist bởi user hiện tại chưa
+        $isWishlisted = $this->tours->isWishlisted($id, $userId);
+
+        return view('clients.tour-detail', compact('title', 'tourDetail', 'getReviews', 'avgStar', 'countReview', 'checkDisplay','tourRecommendations', 'isWishlisted'));
     }
 
     public function reviews(Request $req)
@@ -75,7 +78,7 @@ class TourDetailController extends Controller
         $dataReview = [
             'tourId' => $tourId,
             'userId' => $userId,
-            'comment' => $message,
+            'content' => $message,
             'rating' => $star
         ];
 

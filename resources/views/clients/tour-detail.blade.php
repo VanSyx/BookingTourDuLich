@@ -101,9 +101,176 @@
             <div class="col-xl-4 col-lg-5 text-lg-end" data-aos="fade-right" data-aos-duration="1500"
                 data-aos-offset="50">
                 <div class="tour-header-social mb-10">
-                    <a href="#"><i class="far fa-share-alt"></i>Share tours</a>
-                    <a href="#"><i class="fas fa-heart bgc-secondary"></i>Wish list</a>
+                    {{-- ===== SHARE BUTTON DROPDOWN ===== --}}
+                    <div class="tour-share-wrapper" style="position:relative; display:inline-block;">
+                        <a href="#" id="btn-share-tour" class="tour-share-btn">
+                            <i class="far fa-share-alt"></i>Chia sẻ
+                        </a>
+                        <div class="share-dropdown" id="share-dropdown" style="display:none;">
+                            <a href="#" class="share-option share-facebook" title="Facebook">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                            </a>
+                            <a href="#" class="share-option share-twitter" title="Twitter/X">
+                                <i class="fab fa-twitter"></i> Twitter / X
+                            </a>
+                            <a href="#" class="share-option share-linkedin" title="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i> LinkedIn
+                            </a>
+                            <a href="#" class="share-option share-whatsapp" title="WhatsApp">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="#" class="share-option share-copylink" id="btn-copy-link" title="Sao chép link">
+                                <i class="far fa-copy"></i> <span id="copy-link-text">Sao chép link</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- ===== WISHLIST BUTTON ===== --}}
+                    <a href="#" id="btn-wishlist" class="tour-wishlist-btn {{ $isWishlisted ? 'wishlisted' : '' }}"
+                        data-tour-id="{{ $tourDetail->tourId }}" data-url="{{ route('wishlist.toggle') }}"
+                        data-login-url="{{ route('login') }}"
+                        title="{{ $isWishlisted ? 'Xoá khỏi yêu thích' : 'Thêm vào yêu thích' }}">
+                        <i class="{{ $isWishlisted ? 'fas' : 'far' }} fa-heart"></i>
+                        <span id="wishlist-label">{{ $isWishlisted ? 'Đã yêu thích' : 'Yêu thích' }}</span>
+                    </a>
                 </div>
+
+                {{-- CSS nội tuyến cho share & wishlist --}}
+                <style>
+                    /* --- Share Button --- */
+                    .tour-share-wrapper {
+                        margin-right: 8px;
+                    }
+
+                    .tour-share-btn {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 8px 16px;
+                        border-radius: 30px;
+                        border: 2px solid #e0e0e0;
+                        color: #555;
+                        font-weight: 600;
+                        font-size: 14px;
+                        text-decoration: none;
+                        transition: all .25s;
+                        background: #fff;
+                    }
+
+                    .tour-share-btn:hover {
+                        border-color: #0077b6;
+                        color: #0077b6;
+                        background: #f0f8ff;
+                    }
+
+                    /* --- Share Dropdown --- */
+                    .share-dropdown {
+                        position: absolute;
+                        top: calc(100% + 8px);
+                        right: 0;
+                        background: #fff;
+                        border-radius: 14px;
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, .13);
+                        min-width: 190px;
+                        overflow: hidden;
+                        z-index: 999;
+                        padding: 6px 0;
+                        animation: fadeInDown .2s ease;
+                    }
+
+                    @keyframes fadeInDown {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-8px);
+                        }
+
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    .share-option {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 10px 18px;
+                        color: #333;
+                        font-size: 14px;
+                        font-weight: 500;
+                        text-decoration: none;
+                        transition: background .18s;
+                    }
+
+                    .share-option:hover {
+                        background: #f5f5f5;
+                        color: #333;
+                    }
+
+                    .share-option i {
+                        width: 20px;
+                        text-align: center;
+                        font-size: 16px;
+                    }
+
+                    .share-facebook i {
+                        color: #1877F2;
+                    }
+
+                    .share-twitter i {
+                        color: #1DA1F2;
+                    }
+
+                    .share-linkedin i {
+                        color: #0A66C2;
+                    }
+
+                    .share-whatsapp i {
+                        color: #25D366;
+                    }
+
+                    .share-copylink i {
+                        color: #777;
+                    }
+
+                    #copy-link-text.copied {
+                        color: #28a745;
+                        font-weight: 700;
+                    }
+
+                    /* --- Wishlist Button --- */
+                    .tour-wishlist-btn {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 8px 16px;
+                        border-radius: 30px;
+                        border: 2px solid #e0e0e0;
+                        color: #555;
+                        font-weight: 600;
+                        font-size: 14px;
+                        text-decoration: none;
+                        transition: all .25s;
+                        background: #fff;
+                    }
+
+                    .tour-wishlist-btn:hover,
+                    .tour-wishlist-btn.wishlisted {
+                        border-color: #e74c3c;
+                        color: #e74c3c;
+                        background: #fff5f5;
+                    }
+
+                    .tour-wishlist-btn i {
+                        font-size: 15px;
+                        transition: transform .2s;
+                    }
+
+                    .tour-wishlist-btn:hover i,
+                    .tour-wishlist-btn.wishlisted i {
+                        transform: scale(1.2);
+                    }
+                </style>
             </div>
         </div>
         <hr class="mt-50 mb-70">

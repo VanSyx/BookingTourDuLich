@@ -846,7 +846,7 @@ $(document).ready(function () {
             method: "POST",
             data: {
                 tourId: tourIdReview,
-                _token: $('input[name="_token"]').val(),
+                _token: $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val(),
             },
             success: function (response) {
                 if (response.success) {
@@ -854,7 +854,7 @@ $(document).ready(function () {
                         tourId: tourIdReview,
                         rating: currentRating,
                         message: message,
-                        _token: $('input[name="_token"]').val(),
+                        _token: $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val(),
                     };
 
                     // Gửi AJAX request
@@ -1013,5 +1013,129 @@ $(document).ready(function () {
         toastr.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói.');
     }
     
-    
+    /********************************************
+     * WISHLIST - TOUR DETAIL                   *
+     ********************************************/
+    $(document).on("click", "#btn-wishlist", function (e) {
+        e.preventDefault();
+
+        var btn       = $(this);
+        var tourId    = btn.data("tour-id");
+        var url       = btn.data("url");
+        var loginUrl  = btn.data("login-url");
+        var icon      = btn.find("i");
+        var label     = btn.find("#wishlist-label");
+
+        // Use the token from the comment form or booking form
+        var token = $('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr("content");
+
+        $.ajax({
+            url: url,
+            method: "POST",
+            data: {
+                tourId: tourId,
+                _token: token,
+            },
+            success: function (response) {
+                if (response.success) {
+                    if (response.action === "added") {
+                        btn.addClass("wishlisted");
+                        icon.removeClass("far").addClass("fas");
+                        label.text("Đã yêu thích");
+                        btn.attr("title", "Xoá khỏi yêu thích");
+                        toastr.success(response.message);
+                    } else {
+                        btn.removeClass("wishlisted");
+                        icon.removeClass("fas").addClass("far");
+                        label.text("Yêu thích");
+                        btn.attr("title", "Thêm vào yêu thích");
+                        toastr.info(response.message);
+                    }
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function (xhr) {
+                if (xhr.status === 401) {
+                    // Chưa đăng nhập → chuyển sang trang login
+                    toastr.warning("Vui lòng đăng nhập để thêm vào danh sách yêu thích.");
+                    setTimeout(function () {
+                        window.location.href = loginUrl;
+                    }, 1200);
+                } else {
+                    toastr.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
+                }
+            },
+        });
+    });
+
+    /********************************************
+     * SHARE - TOUR DETAIL                      *
+     ********************************************/
+    // Toggle share dropdown
+    $(document).on("click", "#btn-share-tour", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var dropdown = $("#share-dropdown");
+        dropdown.is(":visible") ? dropdown.fadeOut(150) : dropdown.fadeIn(150);
+    });
+
+    // Đóng dropdown khi click ngoài
+    $(document).on("click", function (e) {
+        if (!$(e.target).closest(".tour-share-wrapper").length) {
+            $("#share-dropdown").fadeOut(150);
+        }
+    });
+
+    // Khởi tạo share links khi dropdown mở
+    $(document).on("click", "#btn-share-tour", function () {
+        var pageUrl     = encodeURIComponent(window.location.href);
+        var pageTitle   = encodeURIComponent(document.title);
+
+        $(".share-facebook").attr(
+            "href",
+            "https://www.facebook.com/sharer/sharer.php?u=" + pageUrl
+        ).attr("target", "_blank").attr("rel", "noopener");
+
+        $(".share-twitter").attr(
+            "href",
+            "https://twitter.com/intent/tweet?url=" + pageUrl + "&text=" + pageTitle
+        ).attr("target", "_blank").attr("rel", "noopener");
+
+        $(".share-linkedin").attr(
+            "href",
+            "https://www.linkedin.com/shareArticle?mini=true&url=" + pageUrl + "&title=" + pageTitle
+        ).attr("target", "_blank").attr("rel", "noopener");
+
+        $(".share-whatsapp").attr(
+            "href",
+            "https://api.whatsapp.com/send?text=" + pageTitle + "%20" + pageUrl
+        ).attr("target", "_blank").attr("rel", "noopener");
+    });
+
+    // Copy Link
+    $(document).on("click", "#btn-copy-link", function (e) {
+        e.preventDefault();
+        var linkText = $("#copy-link-text");
+        var currentUrl = window.location.href;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(currentUrl).then(function () {
+                linkText.text("Đã sao chép!").addClass("copied");
+                setTimeout(function () {
+                    linkText.text("Sao chép link").removeClass("copied");
+                }, 2000);
+            });
+        } else {
+            // Fallback cho trình duyệt cũ
+            var tempInput = $("<input>").val(currentUrl).appendTo("body").select();
+            document.execCommand("copy");
+            tempInput.remove();
+            linkText.text("Đã sao chép!").addClass("copied");
+            setTimeout(function () {
+                linkText.text("Sao chép link").removeClass("copied");
+            }, 2000);
+        }
+    });
+
 });

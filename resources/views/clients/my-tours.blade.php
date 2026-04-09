@@ -41,14 +41,18 @@
                     <div class="destination-item style-three bgc-lighter" data-aos="fade-up" data-aos-duration="1500"
                         data-aos-offset="50">
                         <div class="image">
-                            @if ($tour->bookingStatus == 'b')
-                                <span class="badge">Đợi xác nhận</span>
-                            @elseif ($tour->bookingStatus == 'y')
-                                <span class="badge bgc-pink">Sắp khởi hành</span>
-                            @elseif ($tour->bookingStatus == 'f')
-                                <span class="badge bgc-primary">Hoàn thành</span>
-                            @elseif ($tour->bookingStatus == 'c')
+                            @if ($tour->bookingStatus == 'c')
                                 <span class="badge" style="background-color: red">Đã hủy</span>
+                            @elseif ($tour->bookingStatus == 'f')
+                                <span class="badge bgc-primary">Đã hoàn thành</span>
+                            @elseif ($tour->bookingStatus == 'y')
+                                <span class="badge bgc-pink">Chuẩn bị khởi hành</span>
+                            @else
+                                @if ($tour->paymentStatus == 'n')
+                                    <span class="badge" style="background-color: #ff9800;">Chưa thanh toán</span>
+                                @else
+                                    <span class="badge">Đợi xác nhận</span>
+                                @endif
                             @endif
 
 
@@ -70,8 +74,12 @@
 
                                 </div>
                             </div>
-                            <h5><a
-                                    href="{{ route('tour-booked', ['bookingId' => $tour->bookingId, 'checkoutId' => $tour->checkoutId]) }}">{{ $tour->title }}</a>
+                            <h5>
+                                @if ($tour->bookingStatus == 'f')
+                                    <a href="{{ route('tour-detail', ['id' => $tour->tourId]) }}">{{ $tour->title }}</a>
+                                @else
+                                    <a href="{{ route('tour-booked', ['bookingId' => $tour->bookingId, 'checkoutId' => $tour->checkoutId]) }}">{{ $tour->title }}</a>
+                                @endif
                             </h5>
                             <div class="truncate-3-lines">
                                 {!! $tour->description !!}

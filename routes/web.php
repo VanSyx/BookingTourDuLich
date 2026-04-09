@@ -24,6 +24,7 @@ use App\Http\Controllers\clients\MyTourController;
 use App\Http\Controllers\clients\PayPalController;
 use App\Http\Controllers\clients\SearchController;
 use App\Http\Controllers\clients\TourBookedController;
+use App\Http\Controllers\clients\WishlistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -99,6 +100,10 @@ Route::post('/create-contact', [ContactController::class, 'createContact'])->nam
 //Search 
 Route::get('/search', [SearchController::class, 'index'])->name(name: 'search');
 Route::get('/search-voice-text', [SearchController::class, 'searchTours'])->name('search-voice-text');
+
+//Wishlist (auth check được thực hiện bên trong controller để trả JSON thay vì redirect)
+Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+Route::get('/my-wishlist', [WishlistController::class, 'index'])->name('my-wishlist')->middleware('checkLoginClient');
 
 
 //ADMIN
