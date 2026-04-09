@@ -26,7 +26,7 @@
                 <img src="{{ asset('admin/assets/images/user-profile/' . $review->avatar) }}" alt="">
             </div>
             <div class="content">
-                <h6>{{ $review->fullName }}</h6>
+                <h6>{{ !empty($review->fullName) ? $review->fullName : $review->username }}</h6>
                 <div class="ratting">
                     @for ($i = 0; $i < 5; $i++)
                         @if ($review->rating && $i < $review->rating)
@@ -38,7 +38,7 @@
 
                 </div>
                 <span class="time">{{ $tourDetail->time }}</span>
-                <p>{{ $review->comment }}</p>
+                <p>{{ $review->content }}</p>
             </div>
         </div>
     @endforeach
