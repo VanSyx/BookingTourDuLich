@@ -66,7 +66,6 @@
 
 1. **Clone the Repository**:
    ```bash
-=======
    git clone https://github.com/VanSyx/BookingTourDuLich
    cd travela
    ```
