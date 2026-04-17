@@ -21,31 +21,40 @@ class DashboardModel extends Model
         $totalAmount = DB::table('tbl_checkout')
             ->where('paymentStatus', 'y')
             ->sum('amount');
+        // ✅ Số người dùng đã đăng ký tài khoản (không tính tài khoản bị xóa thủnh lý lạc)
+        $countUsers = DB::table('tbl_users')->count();
 
         // Trả về mảng chứa các dữ liệu tổng hợp
         return [
-            'tourWorking' => $tourWorking,
+            'tourWorking'  => $tourWorking,
             'countBooking' => $countBooking,
-            'totalAmount' => $totalAmount,
+            'totalAmount'  => $totalAmount,
+            'countUsers'   => $countUsers,
         ];
     }
 
     public function getValueDomain()
     {
-        // Lấy số lượng tours cho mỗi miền (b, t, n)
+        // Lấy số lượng tours đang hoạt động cho mỗi miền (b, t, n)
         return DB::table('tbl_tours')
             ->select(DB::raw('domain, COUNT(*) as count'))
-            ->whereIn('domain', ['b', 't', 'n'])  // Chỉ lấy các miền có domain b, t, n
-            ->groupBy('domain')  // Nhóm theo domain
+            ->where('availability', 1)           // ✅ Chỉ đếm tour đang hiện thị
+            ->whereIn('domain', ['b', 't', 'n'])
+            ->groupBy('domain')
             ->get()
-            ->pluck('count', 'domain');  // Trả về mảng với key là domain và value là count
+            ->pluck('count', 'domain');
     }
 
     public function getValuePayment()
     {
+        // ✅ Chỉ tính các giao dịch thuộc booking chưa bị huỷ
+        // và có trạng thái thanh toán hợp lệ (y = đã TT, n = chưa TT, r = chờ hoàn)
         return DB::table('tbl_checkout')
-            ->select('paymentMethod', \DB::raw('COUNT(*) as count'))
-            ->groupBy('paymentMethod')
+            ->join('tbl_booking', 'tbl_checkout.bookingId', '=', 'tbl_booking.bookingId')
+            ->select('tbl_checkout.paymentMethod', DB::raw('COUNT(*) as count'))
+            ->whereNotIn('tbl_booking.bookingStatus', ['c'])          // Loại booking đã huỷ
+            ->whereNotIn('tbl_checkout.paymentStatus', ['c', 'rf'])   // Loại checkout đã cancel hoặc đã hoàn
+            ->groupBy('tbl_checkout.paymentMethod')
             ->get()
             ->toArray();
     }

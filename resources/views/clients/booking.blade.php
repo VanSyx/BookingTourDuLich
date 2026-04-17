@@ -158,6 +158,60 @@
     </form>
 </section>
 
+{{-- MoMo callback: nếu có transIdMomo thì thêm hidden input vào form --}}
+@if(!empty($transIdMomo))
+<script>
+    $(document).ready(function() {
+        var $form = $(".booking-container");
+
+        // Thêm transactionId vào form
+        $form.append($('<input>', { type: 'hidden', name: 'transactionIdMomo', value: '{{ $transIdMomo }}' }));
+
+        // Hiển thị thông báo xác nhận đặt tour sau khi thanh toán MoMo
+        $('body').append('<div id="momo-success-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;">' +
+            '<div style="background:#fff;border-radius:12px;padding:40px 36px;text-align:center;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">' +
+            '<div style="font-size:56px;">&#127881;</div>' +
+            '<h3 style="color:#ae2070;margin:16px 0 8px;">Thanh toán MoMo thành công!</h3>' +
+            '<p style="color:#555;margin-bottom:20px;">Giao dịch của bạn đã được xác nhận.<br>Hệ thống đang hoàn tất đặt tour...</p>' +
+            '<div style="background:#f5f5f5;border-radius:8px;padding:12px;color:#388e3c;font-weight:600;">' +
+            '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...</div>' +
+            '</div></div>');
+
+        // Tự động submit form booking sau 1.5s
+        setTimeout(function() {
+            var actionUrl = $form.attr("action");
+            $.ajax({
+                url: actionUrl,
+                method: "POST",
+                data: $form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $("#momo-success-overlay .fa-spinner").replaceWith('<i class="fa fa-check-circle" style="color:#388e3c;"></i>');
+                        $("#momo-success-overlay div div:last-child").text(' Đang chuyển hướng...');
+                        setTimeout(function() {
+                            window.location.href = response.redirectUrl;
+                        }, 800);
+                    } else {
+                        $('#momo-success-overlay').remove();
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(response.message || 'Đặt tour không thành công. Vui lòng liên hệ hỗ trợ.');
+                        } else {
+                            alert(response.message || 'Đặt tour không thành công. Vui lòng liên hệ hỗ trợ.');
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    $('#momo-success-overlay').remove();
+                    var msg = xhr.responseJSON && xhr.responseJSON.message
+                              ? xhr.responseJSON.message : 'Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ.';
+                    alert(msg);
+                }
+            });
+        }, 1500);
+    });
+</script>
+@endif
+
 <!-- ✅ NEW: PayPal SDK Script -->
 @if (!empty($paypalClientId))
 <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD"></script>

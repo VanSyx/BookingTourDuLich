@@ -33,8 +33,14 @@
         <td>
             @if ($booking->paymentStatus == 'n')
                 <span class="badge badge-danger">Chưa thanh toán</span>
-            @else
+            @elseif ($booking->paymentStatus == 'y')
                 <span class="badge badge-success">Đã thanh toán</span>
+            @elseif ($booking->paymentStatus == 'r')
+                <span class="badge badge-warning">Chờ hoàn tiền</span>
+            @elseif ($booking->paymentStatus == 'c')
+                <span class="badge badge-secondary">Đã huỷ</span>
+            @elseif ($booking->paymentStatus == 'rf')
+                <span class="badge badge-info">Đã hoàn tiền</span>
             @endif
         </td>
 
@@ -51,6 +57,11 @@
                     @endif
                     <a class="dropdown-item finish-booking {{ $booking->hide }}" href="javascript:void(0)" data-bookingId="{{ $booking->bookingId }}"
                         data-urlfinish="{{ route('admin.finish-booking') }}">Đã hoàn thành</a>
+                    @if (in_array($booking->bookingStatus, ['b', 'y']))
+                    <a class="dropdown-item text-danger cancel-booking-admin" href="javascript:void(0)"
+                        data-bookingId="{{ $booking->bookingId }}"
+                        data-urlCancel="{{ route('admin.cancel-booking') }}">Huỷ Booking</a>
+                    @endif
                     <a class="dropdown-item" href="{{ route('admin.booking-detail',['id' => $booking->bookingId]) }}">Xem chi tiết</a>
                 </div>
             </div>

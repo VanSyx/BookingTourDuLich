@@ -88,21 +88,98 @@
                 <li role="presentation" class="nav-item dropdown open">
                     <a href="javascript:;" class="dropdown-toggle info-number" id="navbarDropdown1"
                         data-toggle="dropdown" aria-expanded="false">
-                        <i class="fa fa-envelope-o"></i>
-                        <span class="badge bg-green">{{ $unreadCount }}</span>
+                        <i class="fa fa-bell-o"></i>
+                        @if ($totalNotifications > 0)
+                            <span class="badge bg-red">{{ $totalNotifications > 99 ? '99+' : $totalNotifications }}</span>
+                        @endif
                     </a>
-                    <ul class="dropdown-menu list-unstyled msg_list" role="menu" aria-labelledby="navbarDropdown1">
-                        @foreach ($unreadContacts->take(3) as $item)
-                            <li class="nav-item">
-                                <a class="dropdown-item" href="{{ route('admin.contact') }}">
-                                    <span>
-                                        <b><span>{{ $item->fullName }}</span></b>
-                                        <span class="time">{{ $item->phoneNumber }}</span>
+                    <ul class="dropdown-menu list-unstyled msg_list" role="menu" aria-labelledby="navbarDropdown1"
+                        style="min-width:320px; max-height:420px; overflow-y:auto;">
+
+                        {{-- Header --}}
+                        <li class="nav-item" style="padding:10px 15px; border-bottom:1px solid #eee; font-weight:600; color:#555;">
+                            <i class="fa fa-bell"></i> Thông báo hệ thống
+                        </li>
+
+                        {{-- Liên hệ chưa trả lời --}}
+                        @if ($unreadCount > 0)
+                            <li class="nav-item" style="padding:6px 15px; background:#fff8e1;">
+                                <a class="dropdown-item" href="{{ route('admin.contact') }}" style="padding:0;">
+                                    <span style="color:#f57c00; font-weight:600;">
+                                        <i class="fa fa-envelope"></i>
+                                        {{ $unreadCount }} liên hệ chưa được trả lời
                                     </span>
-                                    <span class="message text-contact-truncate" >{{ $item->message }} </span>
                                 </a>
                             </li>
-                        @endforeach
+                            @foreach ($unreadContacts->take(2) as $item)
+                                <li class="nav-item" style="padding:4px 15px 4px 30px; border-bottom:1px solid #f5f5f5;">
+                                    <a class="dropdown-item" href="{{ route('admin.contact') }}" style="padding:0;">
+                                        <b>{{ $item->name }}</b>
+                                        <span class="message text-contact-truncate" style="display:block; color:#888; font-size:12px;">
+                                            {{ Str::limit($item->message, 50) }}
+                                        </span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        @endif
+
+                        {{-- Booking mới chưa xác nhận --}}
+                        @if ($newBookingsCount > 0)
+                            <li class="nav-item" style="padding:6px 15px; background:#e8f5e9;">
+                                <a class="dropdown-item" href="{{ route('admin.booking') }}" style="padding:0;">
+                                    <span style="color:#388e3c; font-weight:600;">
+                                        <i class="fa fa-calendar-check-o"></i>
+                                        {{ $newBookingsCount }} đặt tour chưa xác nhận
+                                    </span>
+                                </a>
+                            </li>
+                            @foreach ($newBookingsList->take(2) as $item)
+                                <li class="nav-item" style="padding:4px 15px 4px 30px; border-bottom:1px solid #f5f5f5;">
+                                    <a class="dropdown-item" href="{{ route('admin.booking-detail', ['id' => $item->bookingId]) }}" style="padding:0;">
+                                        <b>{{ $item->fullName }}</b>
+                                        <span style="display:block; color:#888; font-size:12px;">{{ $item->tourTitle }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        @endif
+
+                        {{-- User mới đăng ký --}}
+                        @if ($newUsersCount > 0)
+                            <li class="nav-item" style="padding:6px 15px; background:#e3f2fd; border-bottom:1px solid #eee;">
+                                <a class="dropdown-item" href="{{ route('admin.users') }}" style="padding:0;">
+                                    <span style="color:#1565c0; font-weight:600;">
+                                        <i class="fa fa-user-plus"></i>
+                                        {{ $newUsersCount }} tài khoản mới (7 ngày)
+                                    </span>
+                                </a>
+                            </li>
+                        @endif
+
+                        {{-- Review mới --}}
+                        @if ($newReviewsCount > 0)
+                            <li class="nav-item" style="padding:6px 15px; background:#fce4ec; border-bottom:1px solid #eee;">
+                                <a class="dropdown-item" href="{{ route('admin.tours') }}" style="padding:0;">
+                                    <span style="color:#c62828; font-weight:600;">
+                                        <i class="fa fa-star"></i>
+                                        {{ $newReviewsCount }} đánh giá mới (7 ngày)
+                                    </span>
+                                </a>
+                            </li>
+                        @endif
+
+                        {{-- Không có thông báo --}}
+                        @if ($totalNotifications == 0)
+                            <li class="nav-item" style="padding:15px; text-align:center; color:#999;">
+                                <i class="fa fa-check-circle" style="color:#4caf50;"></i> Không có thông báo mới
+                            </li>
+                        @endif
+
+                        {{-- Footer link --}}
+                        <li class="nav-item" style="padding:8px 15px; border-top:1px solid #eee; text-align:center;">
+                            <a href="{{ route('admin.contact') }}" style="color:#337ab7; font-size:13px;">
+                                Xem tất cả liên hệ <i class="fa fa-arrow-right"></i>
+                            </a>
+                        </li>
                     </ul>
                 </li>
             </ul>

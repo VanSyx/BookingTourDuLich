@@ -38,15 +38,15 @@
                                             hàng</label>
                                         @foreach ($contacts as $contact)
                                             <a href="javascript:void(0)" class="contact-item"
-                                                data-name="{{ $contact->fullName }}" data-email="{{ $contact->email }}"
+                                                data-name="{{ $contact->name }}" data-email="{{ $contact->email }}"
                                                 data-message="{{ $contact->message }}" data-contactid="{{ $contact->contactId }}">
                                                 <div class="mail_list">
                                                     <div class="left">
                                                         <i class="fa fa-circle"></i> <i class="fa fa-edit"></i>
                                                     </div>
                                                     <div class="right">
-                                                        <h3>{{ $contact->fullName }}
-                                                            <small>{{ $contact->phoneNumber }}</small>
+                                                        <h3>{{ $contact->name }}
+                                                            <small>{{ $contact->phoneNumber ?? 'N/A' }}</small>
                                                         </h3>
                                                         <p class="text-contact-truncate">{{ $contact->message }}</p>
                                                     </div>
@@ -96,21 +96,25 @@
     </div>
 
     <!-- compose -->
-    <div class="compose col-md-6  ">
+    <div class="compose col-md-6">
         <div class="compose-header">
             Phản hồi liên hệ
             <button type="button" class="close compose-close">
-                <span>×</span>
+                <span>&times;</span>
             </button>
         </div>
 
         <div class="compose-body">
-            <div id="editor-contact" class="editor-wrapper"></div>
+            <textarea id="editor-contact" rows="8"
+                placeholder="Nhập nội dung phản hồi cho khách hàng..."
+                style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px; resize:vertical; font-family:Arial,sans-serif;"></textarea>
         </div>
 
-        <div class="compose-footer">
-            <button id="" class="send-reply-contact btn btn-sm btn-success" type="button"
-                data-url="{{ route('admin.reply-contact') }}">Gửi</button>
+        <div class="compose-footer" style="margin-top:10px;">
+            <button class="send-reply-contact btn btn-sm btn-success" type="button"
+                data-url="{{ route('admin.reply-contact') }}">
+                <i class="fa fa-paper-plane"></i> Gửi phản hồi
+            </button>
         </div>
     </div>
     <!-- /compose -->

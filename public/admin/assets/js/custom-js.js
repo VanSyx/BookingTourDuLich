@@ -652,7 +652,76 @@ $(document).ready(function () {
         });
     });
 
-    
+    $(document).on("click", ".refunded-money", function (e) {
+        e.preventDefault();
+
+        const bookingId = $(this).data("bookingid");
+        const urlRefund = $(this).data("urlrefund");
+
+        $.ajax({
+            url: urlRefund,
+            method: "POST",
+            data: {
+                bookingId: bookingId,
+                _token: $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    if ($("#tbody-booking").length) {
+                        $("#tbody-booking").html(response.data);
+                        $(".refunded-money").remove();
+                    } else {
+                        setTimeout(() => location.reload(), 800);
+                    }
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function (error) {
+                toastr.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
+            },
+        });
+    });
+
+    $(document).on("click", ".cancel-booking-admin", function (e) {
+        e.preventDefault();
+
+        const bookingId = $(this).data("bookingid");
+        const urlCancel = $(this).data("urlcancel");
+
+        if (!confirm("Bạn có chắc chắn muốn HUỶ booking này?\n\n⚠️ Lưu ý:\n- Số chỗ sẽ được hoàn lại cho tour.\n- Nếu khách đã thanh toán, trạng thái sẽ chuyển sang 'Chờ hoàn tiền' và bạn cần xử lý hoàn tiền thủ công.")) {
+            return;
+        }
+
+        $.ajax({
+            url: urlCancel,
+            method: "POST",
+            data: {
+                bookingId: bookingId,
+                _token: $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    if ($("#tbody-booking").length) {
+                        $("#tbody-booking").html(response.data);
+                    } else {
+                        setTimeout(() => location.reload(), 800);
+                    }
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : "Có lỗi xảy ra. Vui lòng thử lại sau.";
+                toastr.error(msg);
+            },
+        });
+    });
+
     /********************************************
      * BOOKING INVOICE                          *
      ********************************************/
@@ -746,12 +815,21 @@ $(document).ready(function () {
     // Mở compose panel khi nhấn nút Reply
     $(document).on("click", "#compose", function (e) {
         e.preventDefault();
+        e.stopPropagation();
+
         var email = $(".send-reply-contact").attr("data-email");
         if (!email) {
             toastr.error("Vui lòng chọn một liên hệ trước khi phản hồi.");
             return;
         }
-        $(".compose").slideToggle();
+
+        if ($(".compose").is(":visible")) {
+            $(".compose").slideUp();
+        } else {
+            $(".compose").slideDown(250);
+            // Focus vào textarea sau khi mở
+            setTimeout(function() { $("#editor-contact").focus(); }, 300);
+        }
     });
 
     // Đóng compose panel khi nhấn nút X
@@ -759,65 +837,55 @@ $(document).ready(function () {
         $(".compose").slideUp();
     });
 
-    if ($("#editor-contact").length) {
-        CKEDITOR.replace("editor-contact");
-    }
-
     $(document).on("click", ".send-reply-contact", function (e) {
         e.preventDefault();
 
-        // Lấy thông tin từ nút gửi
-        var email = $(this).attr("data-email");
+        var email     = $(this).attr("data-email");
         var contactId = $(this).attr("data-contactid");
-        var editorContent = CKEDITOR.instances["editor-contact"].getData();
+        var urlReply  = $(this).data("url");
 
-        var urlReply = $(this).data("url");
+        // Lấy nội dung từ textarea (không dùng CKEditor)
+        var editorContent = $("#editor-contact").val();
 
         if (!email) {
             toastr.error("Không có địa chỉ email để gửi.");
             return;
         }
-
         if (!editorContent || editorContent.trim() === "") {
             toastr.error("Vui lòng nhập nội dung phản hồi.");
             return;
         }
 
-        // Gửi AJAX request
+        var $btn = $(this);
+        $btn.prop("disabled", true).text("Đang gửi...");
+
         $.ajax({
             url: urlReply,
             type: "POST",
             dataType: "json",
-            headers: {
-                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"), // CSRF Token
-            },
-            data: {
-                contactId: contactId,
-                email: email,
-                message: editorContent,
-            },
+            headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+            data: { contactId: contactId, email: email, message: editorContent },
             success: function (response) {
                 if (response.success) {
                     toastr.success(response.message);
-                    // Xóa element contact-item sau khi phản hồi thành công
-                    $(
-                        ".contact-item[data-contactid='" + contactId + "']"
-                    ).remove();
+                    $(".contact-item[data-contactid='" + contactId + "']").remove();
                     $(".mail_view").hide();
-                    CKEDITOR.instances["editor-contact"].setData(""); // Xóa nội dung CKEditor
+                    $("#editor-contact").val(""); // Xóa textarea
                     $(".compose").slideUp();
-                    $(".send-reply-contact")
-                        .removeAttr("data-email")
-                        .removeAttr("data-contactid");
+                    $(".send-reply-contact").removeAttr("data-email").removeAttr("data-contactid");
                 } else {
                     toastr.error(response.message);
                 }
             },
-            error: function (xhr) {
+            error: function () {
                 toastr.error("Đã xảy ra lỗi khi gửi email. Vui lòng thử lại.");
             },
+            complete: function () {
+                $btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Gửi phản hồi');
+            }
         });
     });
+
 
     /********************************************
      * LOGIN ADMIN                             *

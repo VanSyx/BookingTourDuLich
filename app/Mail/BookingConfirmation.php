@@ -45,16 +45,19 @@ class BookingConfirmation extends Mailable
         return new Content(
             view: 'emails.booking-confirmation',
             with: [
-                'bookingId' => $this->booking['bookingId'],
-                'tourTitle' => $this->tour['title'],
-                'tourDestination' => $this->tour['destination'],
-                'tourStartDate' => date('d/m/Y', strtotime($this->tour['startDate'])),
-                'tourEndDate' => date('d/m/Y', strtotime($this->tour['endDate'])),
-                'numAdults' => $this->booking['numAdults'],
-                'numChildren' => $this->booking['numChildren'],
-                'totalPrice' => number_format($this->booking['totalPrice'], 0, ',', '.'),
-                'fullName' => $this->user['fullName'],
-                'bookingDate' => date('d/m/Y H:i', strtotime($this->booking['bookingDate'])),
+                'bookingId'       => $this->booking['bookingId'] ?? '',
+                'tourTitle'       => $this->tour['title'] ?? '',
+                'tourDestination' => $this->tour['destination'] ?? '',
+                'tourStartDate'   => isset($this->tour['startDate']) ? date('d/m/Y', strtotime($this->tour['startDate'])) : '',
+                'tourEndDate'     => isset($this->tour['endDate'])   ? date('d/m/Y', strtotime($this->tour['endDate']))   : '',
+                'numAdults'       => $this->booking['numAdults'] ?? 0,
+                'numChildren'     => $this->booking['numChildren'] ?? 0,
+                'totalPrice'      => number_format($this->booking['totalPrice'] ?? 0, 0, ',', '.'),
+                'fullName'        => $this->user['fullName'] ?? '',
+                'bookingDate'     => isset($this->booking['bookingDate'])
+                                     ? date('d/m/Y H:i', strtotime($this->booking['bookingDate']))
+                                     : date('d/m/Y H:i'),
+                'userEmail'       => $this->user['email'] ?? '',
             ]
         );
     }

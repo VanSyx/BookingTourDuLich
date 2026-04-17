@@ -101,6 +101,19 @@
                                         @endif
                                         <i class="fal fa-arrow-right"></i>
                                     </a>
+                                @elseif (in_array($tour->bookingStatus, ['b', 'y']) && \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($tour->startDate), false) >= 3)
+                                    <form action="{{ route('cancel-booking') }}" method="POST" style="display:inline-block;"
+                                    onsubmit="return confirm('Bạn có chắc chắn muốn hủy? Hủy trước 3 ngày tới khởi hành sẽ mất phí 50%. Trước 7 ngày sẽ miễn phí 100%. Tiền sẽ được hoàn trả thủ công.')">
+                                        @csrf
+                                        <input type="hidden" name="tourId" value="{{ $tour->tourId }}">
+                                        <input type="hidden" name="bookingId" value="{{ $tour->bookingId }}">
+                                        <input type="hidden" name="quantity__adults" value="{{ $tour->numAdults }}">
+                                        <input type="hidden" name="quantity__children" value="{{ $tour->numChildren }}">
+                                        <button type="submit" class="theme-btn style-two style-three" style="background-color:#ff4d4f; border-color:#ff4d4f;">
+                                            <span data-hover="Huỷ Tour">Huỷ Tour</span>
+                                            <i class="fal fa-times"></i>
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
                         </div>

@@ -193,6 +193,12 @@
                                             data-urlConfirm="{{ route('admin.confirm-booking') }}"><i
                                                 class="fa fa-credit-card"></i> Xác nhận</button>
                                     @endif
+                                    @if (in_array($invoice_booking->bookingStatus, ['b', 'y']))
+                                        <button class="btn btn-danger pull-right cancel-booking-admin"
+                                            data-bookingId="{{ $invoice_booking->bookingId }}"
+                                            data-urlCancel="{{ route('admin.cancel-booking') }}"
+                                            style="margin-right: 5px;"><i class="fa fa-times"></i> Huỷ Booking</button>
+                                    @endif
                                     <button id="received-money" data-bookingid="{{ $invoice_booking->bookingId }}"
                                         data-urlPaid="{{ route('admin.received') }}"
                                         class="btn btn-info pull-right {{ $hide }}" style="margin-right: 5px;"><i

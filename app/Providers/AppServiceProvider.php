@@ -27,11 +27,27 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('admin.blocks.sidebar', function ($view) {
             $contactModel = new ContactModel();
-            $unreadData = $contactModel->countContactsUnread(); // Lấy cả số lượng và danh sách thư
+            $unreadData   = $contactModel->countContactsUnread();
 
-            // Chia sẻ số lượng và danh sách thư chưa trả lời vào view sidebar
-            $view->with('unreadCount', $unreadData['countUnread']);
-            $view->with('unreadContacts', $unreadData['contacts']);
+            // Thông báo bổ sung
+            $newBookingsCount = $contactModel->countNewBookings();
+            $newUsersCount    = $contactModel->countNewUsers();
+            $newReviewsCount  = $contactModel->countNewReviews();
+            $newBookingsList  = $contactModel->getNewBookings();
+
+            // Tổng badge = liên hệ chưa reply + booking mới + user mới + review mới
+            $totalNotifications = $unreadData['countUnread']
+                                + $newBookingsCount
+                                + $newUsersCount
+                                + $newReviewsCount;
+
+            $view->with('unreadCount',        $unreadData['countUnread']);
+            $view->with('unreadContacts',     $unreadData['contacts']);
+            $view->with('newBookingsCount',   $newBookingsCount);
+            $view->with('newBookingsList',    $newBookingsList);
+            $view->with('newUsersCount',      $newUsersCount);
+            $view->with('newReviewsCount',    $newReviewsCount);
+            $view->with('totalNotifications', $totalNotifications);
         });
     }
 }

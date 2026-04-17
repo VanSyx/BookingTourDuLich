@@ -67,6 +67,7 @@ Route::post('/change-avatar-profile', [UserProfileController::class, 'changeAvat
 
 //Hanlde checkout
 Route::post('/booking/{id?}', [BookingController::class, 'index'])->name('booking')->middleware('checkLoginClient');
+Route::post('/validate-booking', [BookingController::class, 'validateBooking'])->name('validate-booking');
 Route::post('/create-booking', [BookingController::class, 'createBooking'])->name('create-booking');
 Route::get('/booking', [BookingController::class, 'handlePaymentMomoCallback'])->name('handlePaymentMomoCallback');
 
@@ -148,6 +149,8 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/booking-detail/{id?}', [BookingManagementController::class, 'showDetail'])->name('admin.booking-detail');
     Route::post('/finish-booking', [BookingManagementController::class, 'finishBooking'])->name('admin.finish-booking');
     Route::post('/received-money', [BookingManagementController::class, 'receiviedMoney'])->name('admin.received');
+    Route::post('/refunded-money', [BookingManagementController::class, 'refundedMoney'])->name('admin.refunded');
+    Route::post('/cancel-booking', [BookingManagementController::class, 'cancelBooking'])->name('admin.cancel-booking');
 
     //Send mail pdf
     Route::post('/admin/send-pdf', [BookingManagementController::class, 'sendPdf'])->name('admin.send.pdf');

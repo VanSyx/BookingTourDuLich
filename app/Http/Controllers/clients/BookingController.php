@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\clients\Booking;
 use App\Models\clients\Checkout;
 use App\Models\clients\Tours;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
@@ -42,6 +43,67 @@ class BookingController extends Controller
         return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
     }
 
+    public function validateBooking(Request $req)
+    {
+        $numAdults = (int) $req->input('numAdults');
+        $numChildren = (int) $req->input('numChildren');
+        $tourId = $req->input('tourId');
+        $userId = $this->getUserId();
+
+        // 1. Kiểm tra user đã đăng nhập chưa
+        if (!$userId) {
+            return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập để đặt tour.'], 401);
+        }
+
+        // 2. Lấy thông tin tour để kiểm tra
+        $tour = $this->tour->getTourDetail($tourId);
+        if (!$tour) {
+            return response()->json(['success' => false, 'message' => 'Tour không tồn tại.'], 404);
+        }
+
+        // 3. Kiểm tra ngày khởi hành tour
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $startDate = Carbon::parse($tour->startDate)->startOfDay();
+        if ($now->greaterThan($startDate)) {
+            return response()->json(['success' => false, 'message' => 'Tour này đã khởi hành vào ngày ' . $startDate->format('d/m/Y') . '. Không thể đặt tour đã qua ngày khởi hành.'], 422);
+        }
+
+        // 4. Kiểm tra số chỗ còn lại
+        $totalPassengers = $numAdults + $numChildren;
+        if ($totalPassengers <= 0) {
+            return response()->json(['success' => false, 'message' => 'Số lượng hành khách không hợp lệ.'], 422);
+        }
+        if ($tour->quantity < $totalPassengers) {
+            return response()->json(['success' => false, 'message' => 'Tour không còn đủ chỗ. Chỉ còn ' . $tour->quantity . ' chỗ trống.'], 422);
+        }
+
+        // 5. Kiểm tra user đã có booking active cho tour này chưa
+        if ($this->booking->hasActiveBooking($tourId, $userId)) {
+            return response()->json(['success' => false, 'message' => 'Bạn đã có đơn đặt tour này đang chờ xử lý hoặc đã được xác nhận. Vui lòng kiểm tra lịch sử đặt tour.'], 422);
+        }
+
+        // 6. Kiểm tra mã giảm giá (nếu có)
+        $couponCode = $req->input('coupon_code');
+        if (!empty($couponCode)) {
+            $promotion = DB::table('tbl_promotions')
+                ->where('code', $couponCode)
+                ->where('isActive', 1)
+                ->where('startDate', '<=', now())
+                ->where('endDate', '>=', now())
+                ->where('quantity', '>', 0)
+                ->first();
+            
+            if (!$promotion) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Mã giảm giá không hợp lệ hoặc đã hết lượt sử dụng.'
+                ], 422);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     public function createBooking(Request $req)
     {
         $address = $req->input('address');
@@ -56,7 +118,7 @@ class BookingController extends Controller
         $userId = $this->getUserId();
 
         // =========================================================
-        // KIỂM TRA LOGIC NGHIỆP VỤ
+        // KIỂM TRA LOGIC NGHIỆP VỤ LẦN CUỐI
         // =========================================================
 
         // 1. Kiểm tra user đã đăng nhập chưa
@@ -70,7 +132,14 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Tour không tồn tại.'], 404);
         }
 
-        // 3. Kiểm tra số chỗ còn lại
+        // 3. Kiểm tra ngày khởi hành tour
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $startDate = Carbon::parse($tour->startDate)->startOfDay();
+        if ($now->greaterThan($startDate)) {
+            return response()->json(['success' => false, 'message' => 'Tour này đã khởi hành vào ngày ' . $startDate->format('d/m/Y') . '. Không thể đặt tour đã qua ngày khởi hành.'], 422);
+        }
+
+        // 4. Kiểm tra số chỗ còn lại
         $totalPassengers = $numAdults + $numChildren;
         if ($totalPassengers <= 0) {
             return response()->json(['success' => false, 'message' => 'Số lượng hành khách không hợp lệ.'], 422);
@@ -79,7 +148,7 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Tour không còn đủ chỗ. Chỉ còn ' . $tour->quantity . ' chỗ trống.'], 422);
         }
 
-        // 4. Kiểm tra user đã có booking active cho tour này chưa
+        // 5. Kiểm tra user đã có booking active cho tour này chưa
         if ($this->booking->hasActiveBooking($tourId, $userId)) {
             return response()->json(['success' => false, 'message' => 'Bạn đã có đơn đặt tour này đang chờ xử lý hoặc đã được xác nhận. Vui lòng kiểm tra lịch sử đặt tour.'], 422);
         }
@@ -150,8 +219,9 @@ class BookingController extends Controller
             'numAdults'   => $numAdults,
             'numChildren' => $numChildren,
             'phoneNumber' => $tel,
-            'totalPrice'  => $totalPrice, // ✅ Now includes applied discount
-            'promotionId' => $appliedPromotionId  // ✅ Link to promotion
+            'totalPrice'  => $totalPrice,
+            'promotionId' => $appliedPromotionId,
+            'bookingDate' => now()->toDateTimeString(), // ✅ Lưu ngày đặt
         ];
 
         $bookingId = $this->booking->createBooking($dataBooking);
@@ -201,51 +271,48 @@ class BookingController extends Controller
         ];
         $this->tour->updateTours($tourId, $dataUpdate);
 
-        // ✅ NEW: Send confirmation emails (TEMPORARILY DISABLED FOR DEBUGGING)
+        // Gửi email xác nhận booking cho user
         try {
-            // Lấy user info
             $user = DB::table('tbl_users')->where('userId', $userId)->first();
-            
-            // DISABLED: Email sending causing timeout
-            // Gửi email xác nhận booking
-            if (false && $user && $user->email) {
+
+            if ($user && $user->email) {
+                // Email xác nhận đặt tour
                 Mail::to($user->email)->send(
                     new BookingConfirmation(
-                        (array) $dataBooking,
+                        array_merge((array) $dataBooking, ['bookingId' => $bookingId]),
                         (array) $tour,
                         (array) $user
                     )
                 );
-                \Log::info("Booking confirmation email sent", [
+                \Log::info('Booking confirmation email sent', [
                     'bookingId' => $bookingId,
-                    'email' => $user->email,
-                    'tour' => $tour->title
+                    'email'     => $user->email,
+                    'tour'      => $tour->title,
                 ]);
-            }
-            
-            // DISABLED: Email sending causing timeout
-            // Gửi email xác nhận thanh toán nếu đã thanh toán
-            if (false && $paymentStatus === 'y') {
-                Mail::to($user->email)->send(
-                    new PaymentConfirmation(
-                        (array) $dataBooking,
-                        $dataCheckout,
-                        (array) $tour,
-                        (array) $user
-                    )
-                );
-                \Log::info("Payment confirmation email sent", [
-                    'bookingId' => $bookingId,
-                    'email' => $user->email,
-                    'paymentMethod' => $paymentMethod
-                ]);
+
+                // Email xác nhận thanh toán nếu đã thanh toán (PayPal)
+                if ($paymentStatus === 'y') {
+                    Mail::to($user->email)->send(
+                        new PaymentConfirmation(
+                            array_merge((array) $dataBooking, ['bookingId' => $bookingId]),
+                            $dataCheckout,
+                            (array) $tour,
+                            (array) $user
+                        )
+                    );
+                    \Log::info('Payment confirmation email sent', [
+                        'bookingId'     => $bookingId,
+                        'email'         => $user->email,
+                        'paymentMethod' => $paymentMethod,
+                    ]);
+                }
             }
         } catch (\Exception $e) {
-            \Log::error("Email sending failed", [
+            \Log::error('Email sending failed', [
                 'bookingId' => $bookingId,
-                'error' => $e->getMessage()
+                'error'     => $e->getMessage(),
             ]);
-            // Email gửi thất bại không ảnh hưởng đến booking - chỉ log warning
+            // Email lỗi không ảnh hưởng booking
         }
 
         // Trả về JSON success để JS xử lý redirect
@@ -346,13 +413,14 @@ class BookingController extends Controller
         session()->forget('tourId');
         // Handle the payment response
         if ($resultCode == '0') {
-            $title = 'Đã thanh toán';
-            return view('clients.booking', compact('title', 'tour', 'transIdMomo'));
+            $title        = 'Đã thanh toán MoMo';
+            $paypalClientId = '';
+            return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
         } else {
-            // Payment failed, handle the error accordingly
-            $title = 'Thanh toán thất bại';
-            $transIdMomo = null;
-            return view('clients.booking', compact('title', 'tour', 'transIdMomo'));
+            $title        = 'Thanh toán thất bại';
+            $transIdMomo  = null;
+            $paypalClientId = '';
+            return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
         }
     }
 

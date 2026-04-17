@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BookingCancellation;
 use App\Models\admin\BookingModel;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class BookingManagementController extends Controller
@@ -149,6 +152,106 @@ class BookingManagementController extends Controller
                 'message' => 'Cập nhật thất bại.'
             ], 500);
         }
+    }
+
+    public function refundedMoney(Request $request){
+        $bookingId = $request->bookingId;
+
+        $dataUpdate = [
+            'paymentStatus' => 'rf' // Refunded
+        ];
+
+        $result = $this->booking->updateCheckout($bookingId, $dataUpdate);
+
+        if ($result) {
+            $list_booking = $this->booking->getBooking();
+            $list_booking = $this->updateHideBooking($list_booking);
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã hoàn tiền cho khách thành công.',
+                'data' => view('admin.partials.list-booking', compact('list_booking'))->render()
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cập nhật thất bại.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin huỷ booking: cập nhật bookingStatus='c', hoàn lại slot, xử lý hoàn tiền.
+     */
+    public function cancelBooking(Request $request)
+    {
+        $bookingId = $request->bookingId;
+
+        // Lấy thông tin booking để hoàn slot và xử lý thanh toán
+        $booking = $this->booking->getInvoiceBooking($bookingId);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy booking.'], 404);
+        }
+
+        // Không cho phép huỷ booking đã hoàn thành hoặc đã huỷ rồi
+        if (in_array($booking->bookingStatus, ['f', 'c'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể huỷ booking đã hoàn thành hoặc đã huỷ.'
+            ], 422);
+        }
+
+        // 1. Cập nhật bookingStatus = 'c'
+        $this->booking->updateBooking($bookingId, ['bookingStatus' => 'c']);
+
+        // 2. Hoàn lại số lượng chỗ cho tour
+        $returnQty = ($booking->numAdults ?? 0) + ($booking->numChildren ?? 0);
+        if ($returnQty > 0 && isset($booking->tourId)) {
+            DB::table('tbl_tours')
+                ->where('tourId', $booking->tourId)
+                ->increment('quantity', $returnQty);
+        }
+
+        // 3. Xử lý trạng thái thanh toán
+        $refundMessage = '';
+        if ($booking->paymentStatus === 'y') {
+            // Đã thanh toán → chuyển sang Pending Refund ('r')
+            $this->booking->updateCheckout($bookingId, ['paymentStatus' => 'r']);
+            $refundMessage = ' Booking đã được thanh toán — vui lòng hoàn tiền thủ công cho khách.';
+        } elseif ($booking->paymentStatus === 'n') {
+            // Chưa thanh toán → huỷ
+            $this->booking->updateCheckout($bookingId, ['paymentStatus' => 'c']);
+        }
+
+        $list_booking = $this->booking->getBooking();
+        $list_booking = $this->updateHideBooking($list_booking);
+
+        // 4. Gửi email thông báo huỷ cho user
+        try {
+            $user = DB::table('tbl_users')->where('userId', $booking->userId)->first();
+            $tour = DB::table('tbl_tours')->where('tourId', $booking->tourId)->first();
+
+            if ($user && $user->email && $tour) {
+                Mail::to($user->email)->send(new BookingCancellation(
+                    (array) $booking,
+                    (array) $tour,
+                    (array) $user,
+                    'admin'
+                ));
+                \Log::info('Cancellation email sent by admin', [
+                    'bookingId' => $bookingId,
+                    'email'     => $user->email,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Cancellation email failed', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã huỷ booking thành công.' . $refundMessage,
+            'data'    => view('admin.partials.list-booking', compact('list_booking'))->render()
+        ]);
     }
 
     private function updateHideBooking($list_booking)

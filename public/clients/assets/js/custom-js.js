@@ -627,13 +627,70 @@ $(document).ready(function () {
         }
         return isValid; // Trả về kết quả kiểm tra
     }
+
+    /**
+     * Gọi server để kiểm tra tính hợp lệ của booking (tour còn hiệu lực, còn chỗ,...)
+     * Trả về jQuery Deferred/Promise: resolve nếu hợp lệ, reject nếu không.
+     */
+    function validateBookingWithServer() {
+        var deferred = $.Deferred();
+        var validateUrl = $(".booking-container").data("validate-url") || "/validate-booking";
+        $.ajax({
+            url: validateUrl,
+            method: "POST",
+            data: {
+                tourId: $("input[name='tourId']").val(),
+                numAdults: $("#numAdults").val(),
+                numChildren: $("#numChildren").val(),
+                coupon_code: $(".order-coupon input").val() || "",
+                _token: $("input[name='_token']").val(),
+            },
+            success: function (response) {
+                if (response.success) {
+                    deferred.resolve();
+                } else {
+                    toastr.error(response.message || "Tour không còn hiệu lực để đặt.");
+                    deferred.reject(response.message);
+                }
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : "Không thể xác minh thông tin tour. Vui lòng thử lại.";
+                toastr.error(msg);
+                deferred.reject(msg);
+            }
+        });
+        return deferred.promise();
+    }
+
     // Kiểm tra tính hợp lệ khi nhấn nút submit
     $(".btn-submit-booking").on("click", function (e) {
         e.preventDefault();
 
         // Nếu tất cả đều hợp lệ, gửi form
         if (validateBookingForm()) {
-            $(".booking-container").submit();
+            var actionUrl = $(".booking-container").attr("action");
+            $.ajax({
+                url: actionUrl,
+                method: "POST",
+                data: $(".booking-container").serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        setTimeout(function(){
+                            window.location.href = response.redirectUrl;
+                        }, 1000);
+                    }
+                },
+                error: function (xhr) {
+                    if(xhr.responseJSON && xhr.responseJSON.message) {
+                        toastr.error(xhr.responseJSON.message);
+                    } else {
+                        toastr.error("Có lỗi xảy ra. Mời thử lại.");
+                    }
+                }
+            });
         }
     });
 
@@ -646,56 +703,92 @@ $(document).ready(function () {
             paymentMethod === "momo-payment";
 
         $(".btn-submit-booking").toggle(!isPaymentSelected); // Ẩn hoặc hiện nút xác nhận
+
+        // Xóa button PayPal nếu đang chọn phương thức khác
+        if (paymentMethod !== "paypal-payment") {
+            $("#paypal-button-container").empty();
+        }
+
         if (paymentMethod === "paypal-payment") {
-            var totalPricePayment = totalPrice / 25000; //switch to USD
-            paypal
-                .Buttons({
-                    createOrder: function (data, actions) {
-                        return actions.order.create({
-                            purchase_units: [
-                                {
-                                    amount: {
-                                        value: totalPricePayment.toFixed(2), // Số tiền thanh toán
+            // ✅ Validate server trước khi render PayPal SDK
+            $("#paypal-button-container").html('<p style="color:#888; font-size:13px;"><i class="fa fa-spinner fa-spin"></i> Đang kiểm tra thông tin tour...</p>');
+            validateBookingWithServer().done(function () {
+                $("#paypal-button-container").empty();
+                var totalPricePayment = totalPrice / 25000; //switch to USD
+                paypal
+                    .Buttons({
+                        createOrder: function (data, actions) {
+                            return actions.order.create({
+                                purchase_units: [
+                                    {
+                                        amount: {
+                                            value: totalPricePayment.toFixed(2), // Số tiền thanh toán
+                                        },
                                     },
-                                },
-                            ],
-                        });
-                    },
-                    onApprove: function (data, actions) {
-                        return actions.order.capture().then(function (details) {
-                            // Hiển thị thông tin thanh toán thành công
-                            console.log(
-                                "Transaction completed by " +
-                                    details.payer.name.given_name
-                            );
-                            // Tạo input hidden mới
-                            var hiddenInput = $("<input>", {
-                                type: "hidden", // Loại input là hidden
-                                name: "transactionIdPaypal", // Tên của input
-                                value: details.id, // Giá trị là transactionId
+                                ],
                             });
+                        },
+                        onApprove: function (data, actions) {
+                            return actions.order.capture().then(function (details) {
+                                console.log("Transaction completed by " + details.payer.name.given_name);
 
-                            // Thêm input hidden vào form
-                            $('input[name="payment"]:checked')
-                                .closest("form")
-                                .append(hiddenInput);
-                            toastr.success("Thanh toán thành công!");
-                            $("#paypal-button-container").hide(); // Ẩn nút PayPal
+                                // Thêm transactionId vào form
+                                var $form = $('input[name="payment"]:checked').closest("form");
+                                $form.append($('<input>', {
+                                    type: 'hidden',
+                                    name: 'transactionIdPaypal',
+                                    value: details.id
+                                }));
 
-                            // Vô hiệu hóa tất cả các radio button
-                            $('input[name="payment"]').prop("disabled", true);
+                                // Vô hiệu hoá PayPal và radio button
+                                $("#paypal-button-container").hide();
+                                $('input[name="payment"]').prop("disabled", true);
 
-                            $(".btn-submit-booking").show(); // Hiện nút xác nhận
-                        });
-                    },
-                    onError: function (err) {
-                        console.error(err);
-                        toastr.error(
-                            "Có lỗi xảy ra trong quá trình thanh toán."
-                        );
-                    },
-                })
-                .render("#paypal-button-container"); // Render nút PayPal vào thẻ chứa
+                                // ✅ Tự động gửi form booking ngay - không cần nhấn "Xác Nhận"
+                                toastr.success("Thanh toán PayPal thành công! Đang xử lý đặt tour...");
+                                $("#paypal-button-container").after('<div id="paypal-processing" style="text-align:center;padding:12px;color:#388e3c;font-weight:600;"><i class="fa fa-spinner fa-spin"></i> Đang xác nhận đặt tour...</div>');
+
+                                var actionUrl = $form.attr("action");
+                                $.ajax({
+                                    url: actionUrl,
+                                    method: "POST",
+                                    data: $form.serialize(),
+                                    success: function (response) {
+                                        if (response.success) {
+                                            toastr.success(response.message);
+                                            setTimeout(function () {
+                                                window.location.href = response.redirectUrl;
+                                            }, 1200);
+                                        } else {
+                                            $("#paypal-processing").remove();
+                                            toastr.error(response.message || "Đặt tour không thành công. Vui lòng liên hệ hỗ trợ.");
+                                        }
+                                    },
+                                    error: function (xhr) {
+                                        $("#paypal-processing").remove();
+                                        var msg = xhr.responseJSON && xhr.responseJSON.message
+                                                  ? xhr.responseJSON.message
+                                                  : "Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ.";
+                                        toastr.error(msg);
+                                    }
+                                });
+                            });
+                        },
+                        onError: function (err) {
+                            console.error(err);
+                            toastr.error(
+                                "Có lỗi xảy ra trong quá trình thanh toán."
+                            );
+                        },
+                    })
+                    .render("#paypal-button-container"); // Render nút PayPal vào thẻ chứa
+            }).fail(function () {
+                // Validate thất bại → không render PayPal, bỏ chọn radio
+                $("#paypal-button-container").empty();
+                $('input[name="payment"]').prop("checked", false);
+                $("#payment_hidden").val("");
+                $(".btn-submit-booking").show();
+            });
         } else {
             // Nếu không phải là PayPal, ẩn nút chứa button PayPal
             $("#paypal-button-container").empty(); // Xóa nút PayPal nếu có
@@ -707,39 +800,27 @@ $(document).ready(function () {
         }
     });
 
-    // Save form data to localStorage before payment
+    // Thanh toán MoMo: validate server trước khi redirect
     $("#btn-momo-payment").click(function (e) {
         e.preventDefault();
         var urlMomo = $(this).data("urlmomo");
 
-        if (validateBookingForm()) {
-            // Gather form data
-            var bookingData = {
-                fullName: $("#username").val(),
-                email: $("#email").val(),
-                tel: $("#tel").val(),
-                address: $("#address").val(),
-                numAdults: $("#numAdults").val(),
-                numChildren: $("#numChildren").val(),
-                payment: $("input[name='payment']:checked").val(),
-                payment_hidden: $("#payment_hidden").val(),
-            };
-            console.log(bookingData);
+        if (!validateBookingForm()) {
+            return;
+        }
 
-            // Save to localStorage
-            localStorage.setItem("bookingData", JSON.stringify(bookingData));
-
+        // ✅ Validate server trước khi chuyển sang cổng MoMo
+        validateBookingWithServer().done(function () {
             $.ajax({
-                url: urlMomo, // Route tạo yêu cầu thanh toán Momo
+                url: urlMomo,
                 method: "POST",
                 data: {
                     amount: totalPrice,
                     tourId: $("input[name='tourId']").val(),
-                    _token: $('input[name="_token"]').val(),
+                    _token: $("input[name='_token']").val(),
                 },
                 success: function (response) {
                     if (response && response.payUrl) {
-                        // Mở popup thanh toán hoặc chuyển hướng người dùng đến URL thanh toán Momo
                         window.location.href = response.payUrl;
                     } else {
                         toastr.error("Không thể tạo thanh toán Momo.");
@@ -749,7 +830,7 @@ $(document).ready(function () {
                     toastr.error("Có lỗi xảy ra khi kết nối đến Momo.");
                 },
             });
-        }
+        }); // .fail() đã được xử lý bởi validateBookingWithServer (hiện toastr.error)
     });
 
     var savedData = localStorage.getItem("bookingData");
