@@ -34,12 +34,17 @@ class BookingController extends Controller
 
         $title = 'Đặt Tour';
         $tour = $this->tour->getTourDetail($id);
+
+        if (!$tour) {
+            return redirect()->route('tours')->with('error', 'Không tìm thấy thông tin tour.');
+        }
+
         $transIdMomo = null; // Initialize the variable
-        
+
         // ✅ NEW: Get PayPal Client ID for frontend SDK
         $paypalMode = config('paypal.mode', 'sandbox');
         $paypalClientId = config('paypal.' . $paypalMode . '.client_id', '');
-        
+
         return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
     }
 
@@ -92,10 +97,10 @@ class BookingController extends Controller
                 ->where('endDate', '>=', now())
                 ->where('quantity', '>', 0)
                 ->first();
-            
+
             if (!$promotion) {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Mã giảm giá không hợp lệ hoặc đã hết lượt sử dụng.'
                 ], 422);
             }
@@ -159,7 +164,7 @@ class BookingController extends Controller
         $couponCode = $req->input('coupon_code'); // Get coupon from form
         $appliedPromotionId = null;
         $appliedDiscount = 0;
-        
+
         if (!empty($couponCode)) {
             // ✅ STEP 1: Find promotion in database
             $promotion = DB::table('tbl_promotions')
@@ -169,18 +174,18 @@ class BookingController extends Controller
                 ->where('endDate', '>=', now())
                 ->where('quantity', '>', 0)
                 ->first();
-            
+
             if (!$promotion) {
                 // ✅ Invalid coupon → reject booking
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Mã giảm giá không hợp lệ hoặc đã hết lượt sử dụng.'
                 ], 422);
             }
-            
+
             // ✅ STEP 2: Calculate discount
             $appliedPromotionId = $promotion->promotionId;
-            
+
             if ($promotion->discountPercent > 0) {
                 // Percentage discount
                 $appliedDiscount = ($totalPrice * $promotion->discountPercent) / 100;
@@ -188,15 +193,15 @@ class BookingController extends Controller
                 // Fixed amount discount
                 $appliedDiscount = $promotion->discountAmount;
             }
-            
+
             // ✅ STEP 3: Apply discount (ensure >= 0)
             $totalPrice = max(0, $totalPrice - $appliedDiscount);
-            
+
             // ✅ STEP 4: Decrement usage count
             DB::table('tbl_promotions')
                 ->where('promotionId', $promotion->promotionId)
                 ->decrement('quantity');
-            
+
             // ✅ LOG for audit
             \Log::info("Promotion applied", [
                 'code' => $couponCode,
@@ -211,15 +216,15 @@ class BookingController extends Controller
         // XỬ LÝ BOOKING VÀ CHECKOUT
         // =========================================================
         $dataBooking = [
-            'tourId'      => $tourId,
-            'userId'      => $userId,
-            'address'     => $address,
-            'fullName'    => $fullName,
-            'email'       => $email,
-            'numAdults'   => $numAdults,
+            'tourId' => $tourId,
+            'userId' => $userId,
+            'address' => $address,
+            'fullName' => $fullName,
+            'email' => $email,
+            'numAdults' => $numAdults,
             'numChildren' => $numChildren,
             'phoneNumber' => $tel,
-            'totalPrice'  => $totalPrice,
+            'totalPrice' => $totalPrice,
             'promotionId' => $appliedPromotionId,
             'bookingDate' => now()->toDateTimeString(), // ✅ Lưu ngày đặt
         ];
@@ -228,24 +233,28 @@ class BookingController extends Controller
 
         // ✅ FIX #2: CORRECTED payment status logic
         $paymentStatus = 'n'; // Default: unpaid
-        
+
         if ($paymentMethod === 'paypal-payment') {
             // ✅ PayPal: Transaction already captured by frontend SDK + onApprove callback
             // Safe to mark as 'y' if we have valid transactionId
             if (!empty($req->transactionIdPaypal)) {
                 $paymentStatus = 'y';
             }
+        } elseif ($paymentMethod === 'momo-payment') {
+            // ✅ MoMo: Trạng thái này chỉ được gọi (auto-submit form) khi callback MoMo trả về resultCode = 0 (Thành công)
+            // Do đó nếu có transactionIdMomo, ta có thể đánh dấu là đã thanh toán
+            if (!empty($req->transactionIdMomo)) {
+                $paymentStatus = 'y';
+            }
         }
-        // ✅ MoMo: Wait for backend callback (will be updated by momoCallback endpoint)
-        // Keep as 'n' until MoMo callback confirms with resultCode=0
-        
+
         // ✅ Cash: Admin confirms payment manually later
         // Keep as 'n' until admin marks received
 
         $dataCheckout = [
-            'bookingId'     => $bookingId,
+            'bookingId' => $bookingId,
             'paymentMethod' => $paymentMethod,
-            'amount'        => $totalPrice,
+            'amount' => $totalPrice,
             'paymentStatus' => $paymentStatus, // ✅ Uses corrected logic
         ];
 
@@ -258,7 +267,7 @@ class BookingController extends Controller
             // Format: CASH-20260402120530-12345
             $dataCheckout['transactionId'] = 'CASH-' . date('YmdHis') . '-' . $bookingId;
         }
-        
+
         $checkoutId = $this->checkout->createCheckout($dataCheckout);
 
         if (!$bookingId || !$checkoutId) {
@@ -286,8 +295,8 @@ class BookingController extends Controller
                 );
                 \Log::info('Booking confirmation email sent', [
                     'bookingId' => $bookingId,
-                    'email'     => $user->email,
-                    'tour'      => $tour->title,
+                    'email' => $user->email,
+                    'tour' => $tour->title,
                 ]);
 
                 // Email xác nhận thanh toán nếu đã thanh toán (PayPal)
@@ -301,8 +310,8 @@ class BookingController extends Controller
                         )
                     );
                     \Log::info('Payment confirmation email sent', [
-                        'bookingId'     => $bookingId,
-                        'email'         => $user->email,
+                        'bookingId' => $bookingId,
+                        'email' => $user->email,
                         'paymentMethod' => $paymentMethod,
                     ]);
                 }
@@ -310,37 +319,49 @@ class BookingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Email sending failed', [
                 'bookingId' => $bookingId,
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             // Email lỗi không ảnh hưởng booking
         }
 
         // Trả về JSON success để JS xử lý redirect
         return response()->json([
-            'success'   => true,
-            'message'   => 'Đặt tour thành công!',
+            'success' => true,
+            'message' => 'Đặt tour thành công!',
             'bookingId' => $bookingId,
-            'checkoutId'=> $checkoutId,
+            'checkoutId' => $checkoutId,
             'redirectUrl' => route('tour-booked', ['bookingId' => $bookingId, 'checkoutId' => $checkoutId]),
         ]);
     }
 
     public function createMomoPayment(Request $request)
     {
+        // Lưu tourId và toàn bộ booking form data vào session để restore sau callback
         session()->put('tourId', $request->tourId);
-        
+        session()->put('momoBookingData', [
+            'tourId' => $request->tourId,
+            'fullName' => $request->fullName,
+            'email' => $request->email,
+            'tel' => $request->tel,
+            'address' => $request->address,
+            'numAdults' => $request->numAdults,
+            'numChildren' => $request->numChildren,
+            'totalPrice' => $request->input('totalPrice') ?? $request->input('amount'),
+            'payment_hidden' => $request->payment_hidden ?? 'momo-payment',
+        ]);
+
         try {
             // Lấy amount từ request, nếu không có thì mặc định 10000 (đơn vị VNĐ)
             $amount = $request->input('amount', 10000);
             // MoMo yêu cầu amount là số nguyên VNĐ
             $amount = (int) $amount;
-    
+
             // Các thông tin cần thiết của MoMo
             $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
             $partnerCode = "MOMOBKUN20180529"; // mã partner của bạn
             $accessKey = "klm05TvNBzhg7h7j"; // access key của bạn
             $secretKey = "at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa"; // secret key của bạn
-    
+
             $orderInfo = "Thanh toán đơn hàng";
             $requestId = time();
             $orderId = time();
@@ -348,22 +369,22 @@ class BookingController extends Controller
             $redirectUrl = url('/booking'); // URL chuyển hướng động
             $ipnUrl = url('/booking');      // URL IPN động
             $requestType = 'payWithATM'; // Kiểu yêu cầu
-    
+
             // Tạo rawHash và chữ ký theo cách thủ công
-            $rawHash = "accessKey=" . $accessKey . 
-                       "&amount=" . $amount . 
-                       "&extraData=" . $extraData . 
-                       "&ipnUrl=" . $ipnUrl . 
-                       "&orderId=" . $orderId . 
-                       "&orderInfo=" . $orderInfo . 
-                       "&partnerCode=" . $partnerCode . 
-                       "&redirectUrl=" . $redirectUrl . 
-                       "&requestId=" . $requestId . 
-                       "&requestType=" . $requestType;
-    
+            $rawHash = "accessKey=" . $accessKey .
+                "&amount=" . $amount .
+                "&extraData=" . $extraData .
+                "&ipnUrl=" . $ipnUrl .
+                "&orderId=" . $orderId .
+                "&orderInfo=" . $orderInfo .
+                "&partnerCode=" . $partnerCode .
+                "&redirectUrl=" . $redirectUrl .
+                "&requestId=" . $requestId .
+                "&requestType=" . $requestType;
+
             // Tạo chữ ký
             $signature = hash_hmac("sha256", $rawHash, $secretKey);
-    
+
             // Dữ liệu gửi đến MoMo
             $data = [
                 'partnerCode' => $partnerCode,
@@ -380,10 +401,10 @@ class BookingController extends Controller
                 'requestType' => $requestType,
                 'signature' => $signature
             ];
-    
+
             // Gửi yêu cầu POST đến MoMo để tạo yêu cầu thanh toán
             $response = Http::post($endpoint, $data);
-    
+
             if ($response->successful()) {
                 $body = $response->json();
                 if (isset($body['payUrl'])) {
@@ -401,34 +422,58 @@ class BookingController extends Controller
             return response()->json(['error' => 'Đã xảy ra lỗi', 'message' => $e->getMessage()], 500);
         }
     }
-    
+
 
     public function handlePaymentMomoCallback(Request $request)
     {
         $resultCode = $request->input('resultCode');
         $transIdMomo = $request->query('transId');
-        // dd(session()->get('tourId'));
-        $tourId = session()->get('tourId'); 
+
+        $tourId = session()->get('tourId');
         $tour = $this->tour->getTourDetail($tourId);
+
+        if (!$tour) {
+            return redirect()->route('tours')->with('error', 'Phiên giao dịch đã hết hạn hoặc không tìm thấy thông tin tour. Vui lòng đặt lại.');
+        }
+
+        // Lấy booking data đã lưu trong session
+        $momoBookingData = session()->get('momoBookingData', []);
+
+        // Giữ lại session cho createBooking sử dụng (xóa sau khi createBooking xong)
         session()->forget('tourId');
-        // Handle the payment response
+
+        $paypalClientId = '';
+
         if ($resultCode == '0') {
-            $title        = 'Đã thanh toán MoMo';
-            $paypalClientId = '';
-            return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
+            $title = 'Thanh toán MoMo thành công';
+            return view('clients.booking', compact(
+                'title',
+                'tour',
+                'transIdMomo',
+                'paypalClientId',
+                'momoBookingData'
+            ));
         } else {
-            $title        = 'Thanh toán thất bại';
-            $transIdMomo  = null;
-            $paypalClientId = '';
-            return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
+            $title = 'Thanh toán thất bại';
+            $transIdMomo = null;
+            $momoBookingData = [];
+            session()->forget('momoBookingData');
+            return view('clients.booking', compact(
+                'title',
+                'tour',
+                'transIdMomo',
+                'paypalClientId',
+                'momoBookingData'
+            ));
         }
     }
 
     //Kiểm tra người dùng đã đặt và hoàn thành tour hay chưa để đánh giá
-    public function checkBooking(Request $req){
+    public function checkBooking(Request $req)
+    {
         $tourId = $req->tourId;
         $userId = $this->getUserId();
-        $check = $this->booking->checkBooking($tourId,$userId);
+        $check = $this->booking->checkBooking($tourId, $userId);
         if (!$check) {
             return response()->json(['success' => false]);
         }

@@ -811,14 +811,17 @@ $(document).ready(function () {
 
         // ✅ Validate server trước khi chuyển sang cổng MoMo
         validateBookingWithServer().done(function () {
+            var formData = $(".booking-container").serializeArray();
+            var dataObj = {};
+            $.each(formData, function (i, field) {
+                dataObj[field.name] = field.value;
+            });
+            dataObj['amount'] = totalPrice; // Endpoint MoMo cũ đang dùng 'amount'. Thêm vào để tránh lỗi tương thích
+
             $.ajax({
                 url: urlMomo,
                 method: "POST",
-                data: {
-                    amount: totalPrice,
-                    tourId: $("input[name='tourId']").val(),
-                    _token: $("input[name='_token']").val(),
-                },
+                data: dataObj,
                 success: function (response) {
                     if (response && response.payUrl) {
                         window.location.href = response.payUrl;

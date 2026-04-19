@@ -72,7 +72,7 @@
                                             <div class="view-mail">
                                                 <p></p>
                                                 <div class="btn-group">
-                                                    <button id="compose" class="btn btn-sm btn-primary"
+                                                    <button id="btn-reply-open" class="btn btn-sm btn-primary"
                                                         type="button"><i class="fa fa-reply"></i> Reply</button>
 
                                                     <button class="btn btn-sm btn-default" type="button"
@@ -95,28 +95,29 @@
         </div>
     </div>
 
-    <!-- compose -->
-    <div class="compose col-md-6">
-        <div class="compose-header">
-            Phản hồi liên hệ
-            <button type="button" class="close compose-close">
-                <span>&times;</span>
-            </button>
+    <!-- compose reply panel -->
+    <div id="reply-compose-panel" style="display:none; position:fixed; bottom:0; right:0; width:40%; min-width:360px;
+        background:#fff; border:1px solid #D9DEE4; border-right:0; border-bottom:0;
+        border-top-left-radius:5px; z-index:10000; box-shadow:-2px -2px 8px rgba(0,0,0,0.15);">
+        <div style="padding:8px 12px; background:#169F85; color:#fff; border-top-left-radius:5px; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fa fa-reply"></i> Phản hồi liên hệ</span>
+            <button type="button" id="btn-reply-close" style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer; line-height:1;">×</button>
         </div>
 
-        <div class="compose-body">
+        <div style="padding:12px;">
             <textarea id="editor-contact" rows="8"
                 placeholder="Nhập nội dung phản hồi cho khách hàng..."
-                style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px; resize:vertical; font-family:Arial,sans-serif;"></textarea>
+                style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px; resize:vertical; font-family:Arial,sans-serif; display:block;"></textarea>
         </div>
 
-        <div class="compose-footer" style="margin-top:10px;">
+        <div style="padding:8px 12px; border-top:1px solid #eee;">
             <button class="send-reply-contact btn btn-sm btn-success" type="button"
                 data-url="{{ route('admin.reply-contact') }}">
                 <i class="fa fa-paper-plane"></i> Gửi phản hồi
             </button>
+            <button type="button" id="btn-reply-close2" class="btn btn-sm btn-default" style="margin-left:6px;">Hủy</button>
         </div>
     </div>
-    <!-- /compose -->
+    <!-- /compose reply panel -->
 
     @include('admin.blocks.footer')

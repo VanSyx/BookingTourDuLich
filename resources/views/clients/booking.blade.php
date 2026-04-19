@@ -158,26 +158,52 @@
     </form>
 </section>
 
-{{-- MoMo callback: nếu có transIdMomo thì thêm hidden input vào form --}}
+{{-- MoMo callback: nếu có transIdMomo thì inject booking data và tự submit --}}
 @if(!empty($transIdMomo))
 <script>
-    $(document).ready(function() {
-        var $form = $(".booking-container");
+    function initializeMomoCallback() {
+        if (typeof jQuery === 'undefined') {
+            setTimeout(initializeMomoCallback, 50);
+            return;
+        }
+        
+        var $ = jQuery;
+        $(document).ready(function() {
+            var $form = $(".booking-container");
 
-        // Thêm transactionId vào form
+
+        // Inject booking data từ PHP session vào form (không phụ thuộc localStorage)
+        @if(!empty($momoBookingData))
+        var momoData = @json($momoBookingData);
+        $.each(momoData, function(key, val) {
+            $form.find('[name="' + key + '"]').val(val);
+        });
+        // Đảm bảo payment_hidden đúng
+        $form.find('[name="payment_hidden"]').val('momo-payment');
+        @endif
+
+        // Thêm transactionId MoMo
         $form.append($('<input>', { type: 'hidden', name: 'transactionIdMomo', value: '{{ $transIdMomo }}' }));
+        // Đảm bảo _token có
+        if ($form.find('[name="_token"]').length === 0) {
+            $form.append($('<input>', { type: 'hidden', name: '_token', value: '{{ csrf_token() }}' }));
+        }
 
-        // Hiển thị thông báo xác nhận đặt tour sau khi thanh toán MoMo
-        $('body').append('<div id="momo-success-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;">' +
-            '<div style="background:#fff;border-radius:12px;padding:40px 36px;text-align:center;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">' +
-            '<div style="font-size:56px;">&#127881;</div>' +
-            '<h3 style="color:#ae2070;margin:16px 0 8px;">Thanh toán MoMo thành công!</h3>' +
-            '<p style="color:#555;margin-bottom:20px;">Giao dịch của bạn đã được xác nhận.<br>Hệ thống đang hoàn tất đặt tour...</p>' +
-            '<div style="background:#f5f5f5;border-radius:8px;padding:12px;color:#388e3c;font-weight:600;">' +
-            '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...</div>' +
-            '</div></div>');
+        // Hiển thị overlay thông báo thành công
+        $('body').append(
+            '<div id="momo-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;' +
+            'background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;">' +
+            '<div style="background:#fff;border-radius:14px;padding:40px 36px;text-align:center;' +
+            'max-width:440px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.25);">' +
+            '<div style="font-size:60px;margin-bottom:8px;">&#127881;</div>' +
+            '<h3 style="color:#ae2070;margin:0 0 10px;font-size:22px;">Thanh toán MoMo thành công!</h3>' +
+            '<p style="color:#555;margin-bottom:20px;line-height:1.6;">Giao dịch của bạn đã được xác nhận.<br>Hệ thống đang hoàn tất đặt tour cho bạn...</p>' +
+            '<div id="momo-status" style="background:#f0f9f0;border:1px solid #c3e6c3;border-radius:8px;padding:12px;color:#2e7d32;font-weight:600;">' +
+            '<i class="fa fa-spinner fa-spin"></i>&nbsp; Đang xử lý đặt tour...</div>' +
+            '</div></div>'
+        );
 
-        // Tự động submit form booking sau 1.5s
+        // Tự động submit sau 1 giây
         setTimeout(function() {
             var actionUrl = $form.attr("action");
             $.ajax({
@@ -186,13 +212,15 @@
                 data: $form.serialize(),
                 success: function(response) {
                     if (response.success) {
-                        $("#momo-success-overlay .fa-spinner").replaceWith('<i class="fa fa-check-circle" style="color:#388e3c;"></i>');
-                        $("#momo-success-overlay div div:last-child").text(' Đang chuyển hướng...');
+                        $('#momo-status').html('<i class="fa fa-check-circle"></i>&nbsp; Đặt tour thành công! Đang chuyển hướng...')
+                            .css({'background':'#e8f5e9','border-color':'#a5d6a7','color':'#1b5e20'});
+                        // Xóa session MoMo
+                        session_clear: true;
                         setTimeout(function() {
                             window.location.href = response.redirectUrl;
-                        }, 800);
+                        }, 1000);
                     } else {
-                        $('#momo-success-overlay').remove();
+                        $('#momo-overlay').remove();
                         if (typeof toastr !== 'undefined') {
                             toastr.error(response.message || 'Đặt tour không thành công. Vui lòng liên hệ hỗ trợ.');
                         } else {
@@ -201,14 +229,21 @@
                     }
                 },
                 error: function(xhr) {
-                    $('#momo-success-overlay').remove();
+                    $('#momo-overlay').remove();
                     var msg = xhr.responseJSON && xhr.responseJSON.message
-                              ? xhr.responseJSON.message : 'Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ.';
-                    alert(msg);
+                              ? xhr.responseJSON.message
+                              : 'Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ: 1800-1234.';
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(msg);
+                    } else {
+                        alert(msg);
+                    }
                 }
             });
-        }, 1500);
+        }, 1000);
     });
+    }
+    initializeMomoCallback();
 </script>
 @endif
 

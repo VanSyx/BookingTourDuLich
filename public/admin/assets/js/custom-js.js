@@ -810,35 +810,50 @@ $(document).ready(function () {
         // Thêm thuộc tính data-email vào button
         $(".send-reply-contact").attr("data-email", email);
         $(".send-reply-contact").attr("data-contactid", contactId);
+
+        // Đóng panel nếu đang mở
+        $("#reply-compose-panel").hide();
     });
 
-    // Mở compose panel khi nhấn nút Reply
-    $(document).on("click", "#compose", function (e) {
+    // Mở panel Reply khi nhấn nút
+    $(document).on("click", "#btn-reply-open", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation(); // Ngăn hoàn toàn mọi handler khác
 
         var email = $(".send-reply-contact").attr("data-email");
         if (!email) {
-            toastr.error("Vui lòng chọn một liên hệ trước khi phản hồi.");
-            return;
+            if (typeof toastr !== 'undefined') {
+                toastr.error("Vui lòng chọn một liên hệ trước khi phản hồi.");
+            } else {
+                alert("Vui lòng chọn một liên hệ trước khi phản hồi.");
+            }
+            return false;
         }
 
-        if ($(".compose").is(":visible")) {
-            $(".compose").slideUp();
+        var $panel = $("#reply-compose-panel");
+        if ($panel.is(":visible")) {
+            $panel.hide();
         } else {
-            $(".compose").slideDown(250);
-            // Focus vào textarea sau khi mở
-            setTimeout(function() { $("#editor-contact").focus(); }, 300);
+            // Show bằng CSS inline để tránh jQuery animation bị theme can thiệp
+            $panel.css("display", "flex");
+            $panel.css("flex-direction", "column");
+            setTimeout(function() { $("#editor-contact").focus(); }, 50);
         }
+        return false;
     });
 
-    // Đóng compose panel khi nhấn nút X
-    $(document).on("click", ".compose-close", function () {
-        $(".compose").slideUp();
+    // Đóng panel khi nhấn nút × hoặc Hủy
+    $(document).on("click", "#btn-reply-close, #btn-reply-close2", function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        $("#reply-compose-panel").hide();
+        return false;
     });
 
     $(document).on("click", ".send-reply-contact", function (e) {
         e.preventDefault();
+        e.stopImmediatePropagation();
 
         var email     = $(this).attr("data-email");
         var contactId = $(this).attr("data-contactid");
@@ -871,7 +886,7 @@ $(document).ready(function () {
                     $(".contact-item[data-contactid='" + contactId + "']").remove();
                     $(".mail_view").hide();
                     $("#editor-contact").val(""); // Xóa textarea
-                    $(".compose").slideUp();
+                    $("#reply-compose-panel").hide();
                     $(".send-reply-contact").removeAttr("data-email").removeAttr("data-contactid");
                 } else {
                     toastr.error(response.message);
