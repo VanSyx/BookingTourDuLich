@@ -16,3 +16,14 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/storage/logs/*.log
+*.sql
+*.postman_collection.json
+wishlist_cols.json
+/public/admin/assets/images/gallery-tours/*
+!/public/admin/assets/images/gallery-tours/default.jpg
+/public/admin/assets/images/user-profile/*
+!/public/admin/assets/images/user-profile/default.png
+!/public/admin/assets/images/user-profile/avt_admin.jpg
+/public/clients/assets/images/gallery-tours/*
+!/public/clients/assets/images/gallery-tours/default.jpg
