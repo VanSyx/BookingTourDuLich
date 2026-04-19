@@ -109,6 +109,24 @@ class BookingManagementController extends Controller
     {
         $bookingId = $request->bookingId;
 
+        // --- VALIDATION: PHƯƠNG ÁN 2 ---
+        $bookingDetail = $this->booking->getInvoiceBooking($bookingId);
+        
+        if (!$bookingDetail) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy thông tin Booking!'], 404);
+        }
+
+        // Validate 1: Payment Status
+        if ($bookingDetail->paymentStatus != 'y') {
+            return response()->json(['success' => false, 'message' => 'Lỗi: Khách hàng chưa hoàn tất thanh toán! Không thể quyết toán.'], 400);
+        }
+
+        // Validate 2: Date
+        $endDate = Carbon::parse($bookingDetail->endDate)->endOfDay();
+        if (Carbon::now()->lessThan($endDate)) {
+            return response()->json(['success' => false, 'message' => 'Lỗi: Chuyến đi chưa kết thúc (Ngày về: ' . $endDate->format('d/m/Y') . ')! Cần chờ sau chuyến đi để quyết toán.'], 400);
+        }
+
         $dataConfirm = [
             'bookingStatus' => 'f'
         ];
@@ -260,8 +278,11 @@ class BookingManagementController extends Controller
         $currentDate = date('Y-m-d');
 
         foreach ($list_booking as $booking) {
-            // So sánh endDate của booking với ngày hiện tại
-            if ($booking->endDate < $currentDate) {
+            // Nút "Hoàn thành" CHỈ hiển thị khi:
+            // 1. Tour đã kết thúc (hoặc là ngày cuối cùng)
+            // 2. Booking chưa bị huỷ ('c') và chưa hoàn thành ('f'), phải ở trạng thái được xác nhận ('y')
+            // 3. Khách hàng đã thanh toán xong ('y')
+            if ($booking->endDate <= $currentDate && $booking->bookingStatus == 'y' && $booking->paymentStatus == 'y') {
                 $hide = '';
             } else {
                 $hide = 'hide';

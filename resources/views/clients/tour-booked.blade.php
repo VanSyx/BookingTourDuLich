@@ -38,6 +38,16 @@
                     <span class="error-message" id="addressError"></span>
                 </div>
 
+            </div> <!-- end booking__infor -->
+
+            <!-- VÉ ĐIỆN TỬ E-TICKET -->
+            <div class="e-ticket-section" style="margin-top: 30px; text-align: center; border: 2px dashed #ff6600; padding: 20px; border-radius: 10px; background: #fffcf9;">
+                <h3 style="color: #ff6600; font-weight: bold; margin-bottom: 15px;"><i class="fa fa-qrcode"></i> VÉ ĐIỆN TỬ (E-TICKET)</h3>
+                <p>Xuất trình mã QR này cho Hướng Dẫn Viên vào ngày khởi hành để Check-in.</p>
+                <div class="qr-code-wrapper" style="background:#fff; padding: 15px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TRAVELA-TICKET-{{ $tour_booked->bookingId }}-{{ $tour_booked->tourId }}" alt="QR E-Ticket" />
+                </div>
+                <p style="margin-top:10px; font-weight: bold; color: #555;">Mã Đặt Chỗ: <span style="color:#e74c3c;">#{{ $bookingId }}</span></p>
             </div>
 
             <!-- Privacy Agreement Section -->

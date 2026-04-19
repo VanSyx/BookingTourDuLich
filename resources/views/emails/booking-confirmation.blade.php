@@ -194,6 +194,15 @@
                 <div class="price-amount">{{ $totalPrice }} ₫</div>
             </div>
 
+            <!-- VÉ ĐIỆN TỬ (E-TICKET) -->
+            <div style="margin: 30px 0; padding: 20px; background-color: #fcfcfc; border: 2px dashed #ff6600; border-radius: 8px; text-align: center;">
+                <h2 style="color: #ff6600; margin-bottom: 15px; font-size: 20px;">🎫 THẺ LÊN XE (E-TICKET)</h2>
+                <p style="color: #555; margin-bottom: 15px;">Vui lòng lưu lại hình ảnh này và xuất trình cho Hướng Dẫn Viên ngày đi.</p>
+                <div style="display: inline-block; background: white; padding: 10px; border-radius: 5px; border: 1px solid #eee;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TRAVELA-TICKET-{{ $bookingId }}" alt="QR E-Ticket" width="200" height="200" style="display: block; margin: auto;" />
+                </div>
+            </div>
+
             <!-- Next Steps -->
             <div class="next-steps">
                 <h3>📌 Các bước tiếp theo:</h3>
