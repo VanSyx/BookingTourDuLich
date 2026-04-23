@@ -1,262 +1,503 @@
 @include('clients.blocks.header')
 @include('clients.blocks.banner')
 
-<section class="container" style="margin-top:50px; margin-bottom: 100px">
-    {{-- <h1 class="text-center booking-header">Tổng Quan Về Chuyến Đi</h1> --}}
+<style>
+/* ===== BOOKING PAGE STYLES ===== */
+.booking-page { background: #f5f7fa; min-height: 80vh; padding: 40px 0 80px; }
+.booking-steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 36px; }
+.step-item { display: flex; align-items: center; gap: 10px; color: #aaa; font-weight: 600; font-size: 14px; }
+.step-item.active { color: #1a3a5c; }
+.step-item.done { color: #2e7d32; }
+.step-icon { width: 44px; height: 44px; border-radius: 50%; background: #e0e0e0; display: flex;
+  align-items: center; justify-content: center; font-size: 20px; }
+.step-item.active .step-icon { background: #1a3a5c; color: #fff; }
+.step-item.done .step-icon { background: #2e7d32; color: #fff; }
+.step-arrow { width: 60px; height: 2px; background: #ddd; margin: 0 8px; }
 
-    <form action="{{ route('create-booking') }}" method="post" class="booking-container">
-        @csrf
-        <!-- Contact Information -->
-        <div class="booking-info">
-            <h2 class="booking-header">Thông Tin Liên Lạc</h2>
-            <div class="booking__infor">
-                <div class="form-group">
-                    <label for="username">Họ và tên*</label>
-                    <input type="text" id="username" placeholder="Nhập Họ và tên" name="fullName" required>
-                    <span class="error-message" id="usernameError"></span>
-                </div>
+.booking-layout { display: grid; grid-template-columns: 1fr 360px; gap: 28px; align-items: start; }
+@media (max-width: 900px) { .booking-layout { grid-template-columns: 1fr; } }
 
-                <div class="form-group">
-                    <label for="email">Email*</label>
-                    <input type="email" id="email" placeholder="sample@gmail.com" name="email" required>
-                    <span class="error-message" id="emailError"></span>
-                </div>
+/* Left panel */
+.booking-panel { background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,.07); padding: 32px; }
+.booking-panel h4 { font-size: 16px; font-weight: 700; color: #1a3a5c; text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+.bk-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 600px) { .bk-form-row { grid-template-columns: 1fr; } }
+.bk-form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.bk-form-group label { font-size: 13px; font-weight: 600; color: #555; }
+.bk-form-group label span.req { color: #d32f2f; }
+.bk-form-group input, .bk-form-group select, .bk-form-group textarea {
+  border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 14px;
+  font-size: 15px; outline: none; transition: border-color .2s; width: 100%; }
+.bk-form-group input:focus, .bk-form-group select:focus, .bk-form-group textarea:focus { border-color: #1a3a5c; }
 
-                <div class="form-group">
-                    <label for="tel">Số điện thoại*</label>
-                    <input type="number" id="tel" placeholder="Nhập số điện thoại liên hệ" name="tel"
-                        required>
-                    <span class="error-message" id="telError"></span>
-                </div>
+/* Quantity selector */
+.qty-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.qty-box { border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; }
+.qty-box .qty-label { font-size: 13px; font-weight: 600; color: #333; }
+.qty-box .qty-sub { font-size: 11px; color: #999; }
+.qty-controls { display: flex; align-items: center; gap: 10px; }
+.qty-btn { width: 30px; height: 30px; border: 1.5px solid #ddd; border-radius: 50%;
+  background: #fff; cursor: pointer; font-size: 18px; display: flex; align-items: center;
+  justify-content: center; font-weight: 700; color: #555; transition: all .2s; }
+.qty-btn:hover { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+.qty-val { font-size: 16px; font-weight: 700; min-width: 20px; text-align: center; }
 
-                <div class="form-group">
-                    <label for="address">Địa chỉ*</label>
-                    <input type="text" id="address" placeholder="Nhập địa chỉ liên hệ" name="address" required>
-                    <span class="error-message" id="addressError"></span>
-                </div>
+/* Payment methods */
+.payment-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 600px) { .payment-grid { grid-template-columns: 1fr 1fr; } }
+.pm-option { border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;
+  transition: all .2s; position: relative; }
+.pm-option input[type=radio] { position: absolute; opacity: 0; }
+.pm-option img { height: 36px; object-fit: contain; }
+.pm-option span { font-size: 12px; font-weight: 600; color: #555; text-align: center; }
+.pm-option:has(input:checked) { border-color: #1a3a5c; background: #f0f4ff; }
 
+/* Submit btn */
+.btn-submit-booking { background: linear-gradient(135deg, #d32f2f, #b71c1c); color: #fff;
+  border: none; border-radius: 30px; padding: 14px 40px; font-size: 16px; font-weight: 700;
+  cursor: pointer; width: 100%; margin-top: 20px; transition: all .2s; letter-spacing: .5px; }
+.btn-submit-booking:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(211,47,47,.3); }
+
+/* RIGHT: Summary sidebar */
+.booking-summary-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,.07);
+  padding: 24px; position: sticky; top: 20px; }
+.summary-tour-img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 16px; }
+.summary-title { font-size: 16px; font-weight: 700; color: #1a3a5c; margin-bottom: 8px; }
+.summary-row { display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.summary-row:last-child { border-bottom: none; }
+.summary-row .label { color: #777; }
+.summary-row .value { font-weight: 600; color: #333; }
+.summary-total { display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0 0; font-size: 18px; font-weight: 700; color: #d32f2f; margin-top: 8px; }
+.coupon-row { display: flex; gap: 8px; margin: 14px 0; }
+.coupon-row input { flex: 1; border: 1.5px solid #e0e0e0; border-radius: 8px;
+  padding: 8px 12px; font-size: 14px; }
+.coupon-row button { background: #1a3a5c; color: #fff; border: none; border-radius: 8px;
+  padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+/* Schedule info badge */
+.schedule-badge { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 20px; font-size: 14px; }
+.schedule-badge .sch-dates { font-weight: 700; color: #1a3a5c; font-size: 15px; }
+</style>
+
+<div class="booking-page">
+    <div class="container">
+
+        {{-- Steps --}}
+        <div class="booking-steps">
+            <div class="step-item active" id="step1-indicator">
+                <div class="step-icon">📋</div>
+                <span>Nhập thông tin</span>
             </div>
-
-
-            <!-- Passenger Details -->
-            <h2 class="booking-header">Hành Khách</h2>
-
-            <div class="booking__quantity">
-                <div class="form-group quantity-selector">
-                    <label>Người lớn</label>
-                    <div class="input__quanlity">
-                        <button type="button" class="quantity-btn">-</button>
-                        <input type="number" class="quantity-input" value="1" min="1" id="numAdults"
-                            name="numAdults" data-price-adults="{{ $tour->priceAdult }}" readonly>
-                        <button type="button" class="quantity-btn">+</button>
-                    </div>
-                </div>
-
-                <div class="form-group quantity-selector">
-                    <label>Trẻ em</label>
-                    <div class="input__quanlity">
-                        <button type="button" class="quantity-btn">-</button>
-                        <input type="number" class="quantity-input" value="0" min="0" id="numChildren"
-                            name="numChildren" data-price-children="{{ $tour->priceChild }}" readonly>
-                        <button type="button" class="quantity-btn">+</button>
-                    </div>
-                </div>
+            <div class="step-arrow"></div>
+            <div class="step-item" id="step2-indicator">
+                <div class="step-icon">💳</div>
+                <span>Thanh toán</span>
             </div>
-            <!-- Privacy Agreement Section -->
-            <div class="privacy-section">
-                <p>Bằng cách nhấp chuột vào nút "ĐỒNG Ý" dưới đây, Khách hàng đồng ý rằng các điều kiện điều khoản
-                    này sẽ được áp dụng. Vui lòng đọc kỹ điều kiện điều khoản trước khi lựa chọn sử dụng dịch vụ của
-                    Travela.</p>
-                <div class="privacy-checkbox">
-                    <input type="checkbox" id="agree" name="agree" required>
-                    <label for="agree">Tôi đã đọc và đồng ý với <a href="#" target="_blank">Điều khoản thanh
-                            toán</a></label>
-                </div>
+            <div class="step-arrow"></div>
+            <div class="step-item" id="step3-indicator">
+                <div class="step-icon">✅</div>
+                <span>Hoàn tất</span>
             </div>
-            <!-- Payment Method -->
-            <h2 class="booking-header">Phương Thức Thanh Toán</h2>
+        </div>
 
-            <label class="payment-option">
-                <input type="radio" name="payment" value="office-payment" required>
-                <img src="{{ asset('clients/assets/images/contact/icon.png') }}" alt="Office Payment">
-                Thanh toán tại văn phòng
-            </label>
+        <h2 style="text-align:center;font-size:28px;font-weight:800;color:#1a3a5c;margin-bottom:32px;">ĐẶT TOUR</h2>
 
-            <label class="payment-option">
-                <input type="radio" name="payment" value="paypal-payment" required>
-                <img src="{{ asset('clients/assets/images/booking/cong-thanh-toan-paypal.jpg') }}" alt="PayPal">
-                Thanh toán bằng PayPal
-            </label>
-
-            <label class="payment-option">
-                <input type="radio" name="payment" value="momo-payment" required>
-                <img src="{{ asset('clients/assets/images/booking/thanh-toan-momo.jpg') }}" alt="MoMo">
-                Thanh toán bằng Momo
-                @if (!is_null($transIdMomo))
-                    <input type="hidden" name="transactionIdMomo" value="{{ $transIdMomo }}">
-                @endif
-            </label>
-
+        <form action="{{ route('create-booking') }}" method="post" id="bookingForm">
+            @csrf
+            <input type="hidden" name="tourId" value="{{ $tour->tourId }}">
+            <input type="hidden" name="scheduleId" value="{{ isset($schedule) ? $schedule->scheduleId : '' }}">
             <input type="hidden" name="payment_hidden" id="payment_hidden">
-        </div>
+            <input type="hidden" name="totalPrice" id="totalPriceInput">
+            @if (!is_null($transIdMomo))
+                <input type="hidden" name="transactionIdMomo" value="{{ $transIdMomo }}">
+            @endif
 
-        <!-- Order Summary -->
-        <div class="booking-summary">
-            <div class="summary-section">
+            <div class="booking-layout">
+                {{-- LEFT PANEL --}}
                 <div>
-                    <p>Mã tour : {{ $tour->tourId }}</p>
-                    <input type="hidden" name="tourId" id="tourId" value="{{ $tour->tourId }}">
-                    <h5 class="widget-title">{{ $tour->title }}</h5>
-                    <p>Ngày khởi hành : {{ date('d-m-Y', strtotime($tour->startDate)) }}</p>
-                    <p>Ngày kết thúc : {{ date('d-m-Y', strtotime($tour->endDate)) }}</p>
-                    <p class="quantityAvailable">Số chỗ còn nhận : {{ $tour->quantity }}</p>
-                </div>
+                    {{-- STEP 1: Thông tin --}}
+                    <div id="step1" class="booking-panel mb-4">
+                        <h4>📋 Thông tin liên lạc</h4>
 
-                <div class="order-summary">
-                    <div class="summary-item">
-                        <span>Người lớn:</span>
-                        <div>
-                            <span class="quantity__adults">1</span>
-                            <span>X</span>
-                            <span class="total-price">0 VNĐ</span>
+                        {{-- Schedule info --}}
+                        @if(isset($schedule))
+                        <div class="schedule-badge">
+                            <div class="sch-dates">📅 {{ \Carbon\Carbon::parse($schedule->startDate)->format('d/m/Y') }} → {{ \Carbon\Carbon::parse($schedule->endDate)->format('d/m/Y') }}</div>
+                            <div>Số chỗ còn lại: <strong style="color:#388e3c">{{ $schedule->quantity }}</strong></div>
+                            @if($schedule->note)
+                                <div style="color:#e65100;margin-top:4px">ℹ️ {{ $schedule->note }}</div>
+                            @endif
+                        </div>
+                        @endif
+
+                        <div class="bk-form-row">
+                            <div class="bk-form-group">
+                                <label>Họ tên <span class="req">*</span></label>
+                                <input type="text" name="fullName" id="fullName" placeholder="Nguyễn Văn A" required>
+                            </div>
+                            <div class="bk-form-group">
+                                <label>Số điện thoại <span class="req">*</span></label>
+                                <input type="tel" name="tel" id="tel" placeholder="0912345678" required>
+                            </div>
+                        </div>
+                        <div class="bk-form-row">
+                            <div class="bk-form-group">
+                                <label>Email <span class="req">*</span></label>
+                                <input type="email" name="email" id="email" placeholder="email@gmail.com" required>
+                            </div>
+                            <div class="bk-form-group">
+                                <label>Địa chỉ</label>
+                                <input type="text" name="address" id="address" placeholder="TP. Hồ Chí Minh">
+                            </div>
+                        </div>
+
+                        <h4 style="margin-top:24px;">👥 Số hành khách</h4>
+                        <div class="qty-row">
+                            <div class="qty-box">
+                                <div>
+                                    <div class="qty-label">Người lớn</div>
+                                    <div class="qty-sub">Từ 12 tuổi trở lên</div>
+                                </div>
+                                <div class="qty-controls">
+                                    <button type="button" class="qty-btn" onclick="changeQty('adults', -1)">−</button>
+                                    <span class="qty-val" id="qtyAdults">1</span>
+                                    <button type="button" class="qty-btn" onclick="changeQty('adults', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="qty-box">
+                                <div>
+                                    <div class="qty-label">Trẻ em</div>
+                                    <div class="qty-sub">Từ 2 đến 11 tuổi</div>
+                                </div>
+                                <div class="qty-controls">
+                                    <button type="button" class="qty-btn" onclick="changeQty('children', -1)">−</button>
+                                    <span class="qty-val" id="qtyChildren">0</span>
+                                    <button type="button" class="qty-btn" onclick="changeQty('children', 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="numAdults"   id="numAdults"   value="1"
+                            data-price-adults="{{ isset($schedule) ? $schedule->priceAdult : $tour->priceAdult }}">
+                        <input type="hidden" name="numChildren" id="numChildren" value="0"
+                            data-price-children="{{ isset($schedule) ? $schedule->priceChild : $tour->priceChild }}">
+
+                        <div class="bk-form-group" style="margin-top:16px">
+                            <label>Ghi chú</label>
+                            <textarea name="note" rows="3" placeholder="Quý khách có ghi chú lưu ý gì, hãy nói với chúng tôi..."></textarea>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                            <input type="checkbox" id="agree" name="agree" required>
+                            <label for="agree" style="margin:0;font-size:14px">Tôi đã đọc và đồng ý với
+                                <a href="#" style="color:#1a3a5c">Điều khoản thanh toán</a></label>
+                        </div>
+
+                        <button type="button" class="btn-submit-booking" onclick="goToStep2()">
+                            Tiếp tục → Chọn thanh toán
+                        </button>
+                    </div>
+
+                    {{-- STEP 2: Thanh toán --}}
+                    <div id="step2" style="display:none">
+                        <div class="booking-panel mb-4">
+                            <h4>💳 Phương thức thanh toán</h4>
+                            <div class="payment-grid">
+                                <label class="pm-option">
+                                    <input type="radio" name="payment" value="office-payment" checked>
+                                    <img src="{{ asset('clients/assets/images/contact/icon.png') }}" alt="">
+                                    <span>Tại văn phòng</span>
+                                </label>
+                                <label class="pm-option">
+                                    <input type="radio" name="payment" value="paypal-payment">
+                                    <img src="{{ asset('clients/assets/images/booking/cong-thanh-toan-paypal.jpg') }}" alt="PayPal">
+                                    <span>PayPal</span>
+                                </label>
+                                <label class="pm-option">
+                                    <input type="radio" name="payment" value="momo-payment">
+                                    <img src="{{ asset('clients/assets/images/booking/thanh-toan-momo.jpg') }}" alt="MoMo">
+                                    <span>MoMo</span>
+                                </label>
+                            </div>
+
+                            <div id="paypal-button-container" style="display:none"></div>
+                            <button id="btn-momo-payment" class="btn-submit-booking" style="display:none;background:linear-gradient(135deg,#ae2070,#8e1060)"
+                                type="button" data-urlmomo="{{ route('createMomoPayment') }}">
+                                Thanh toán với MoMo
+                                <img src="{{ asset('clients/assets/images/booking/icon-thanh-toan-momo.png') }}" style="height:28px;vertical-align:middle;margin-left:8px">
+                            </button>
+
+                            <div style="display:flex;gap:12px;margin-top:16px">
+                                <button type="button" onclick="goToStep1()" style="flex:1;padding:12px;border:2px solid #ddd;border-radius:30px;background:#fff;font-weight:700;cursor:pointer">
+                                    ← Quay lại
+                                </button>
+                                <button type="submit" class="btn-submit-booking" id="btnConfirm" style="flex:2;margin-top:0">
+                                    Xác nhận đặt tour
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="summary-item">
-                        <span>Trẻ em:</span>
-                        <div>
-                            <span class="quantity__children">0</span>
-                            <span>X</span>
-                            <span class="total-price">0 VNĐ</span>
-                        </div>
-                    </div>
-                    <div class="summary-item">
-                        <span>Giảm giá:</span>
-                        <div>
-                            <span class="total-price">0 VNĐ</span>
-                        </div>
-                    </div>
-                    <div class="summary-item total-price">
-                        <span>Tổng cộng:</span>
-                        <span>0 VNĐ</span>
-                        <input type="hidden" class="totalPrice" name="totalPrice" value="">
-                    </div>
-                </div>
-                <div class="order-coupon">
-                    <input type="text" placeholder="Mã giảm giá" style="width: 65%;">
-                    <button style="width: 30%" class="booking-btn btn-coupon">Áp dụng</button>
                 </div>
 
-                <div id="paypal-button-container"></div>
+                {{-- RIGHT: Summary --}}
+                <div>
+                    <div class="booking-summary-card">
+                        <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tour->images[0] ?? 'cau-vang-da-nang_1775281412.png')) }}"
+                            class="summary-tour-img" alt="{{ $tour->title }}">
 
-                <button type="submit" class="booking-btn btn-submit-booking">Xác Nhận</button>
+                        <div class="summary-title">{{ $tour->title }}</div>
+                        <div style="color:#888;font-size:13px;margin-bottom:14px">
+                            <i class="fal fa-map-marker-alt"></i> {{ $tour->destination }}
+                        </div>
 
-                <button id="btn-momo-payment" class="booking-btn" style="display: none;"
-                    data-urlmomo = "{{ route('createMomoPayment') }}">Thanh toán với Momo <img src="{{ asset('clients/assets/images/booking/icon-thanh-toan-momo.png') }}" alt="" style="width: 10%"></button>
+                        <div class="summary-row">
+                            <span class="label">Ngày khởi hành</span>
+                            <span class="value">
+                                @if(isset($schedule))
+                                    {{ \Carbon\Carbon::parse($schedule->startDate)->format('d/m/Y') }}
+                                @else
+                                    {{ date('d/m/Y', strtotime($tour->startDate)) }}
+                                @endif
+                            </span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="label">Ngày kết thúc</span>
+                            <span class="value">
+                                @if(isset($schedule))
+                                    {{ \Carbon\Carbon::parse($schedule->endDate)->format('d/m/Y') }}
+                                @else
+                                    {{ date('d/m/Y', strtotime($tour->endDate)) }}
+                                @endif
+                            </span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="label">Thời gian</span>
+                            <span class="value">{{ $tour->time }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="label">Số chỗ còn lại</span>
+                            <span class="value" style="color:#388e3c">
+                                {{ isset($schedule) ? $schedule->quantity : $tour->quantity }}
+                            </span>
+                        </div>
 
+                        <hr style="margin:14px 0">
+                        <div class="summary-row">
+                            <span class="label">Người lớn (<span id="summaryAdults">1</span>)</span>
+                            <span class="value" id="summaryAdultsPrice">0 VNĐ</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="label">Trẻ em (<span id="summaryChildren">0</span>)</span>
+                            <span class="value" id="summaryChildrenPrice">0 VNĐ</span>
+                        </div>
+
+                        <div class="coupon-row">
+                            <input type="text" id="couponCode" name="coupon_code" placeholder="Mã giảm giá">
+                            <button type="button" onclick="applyCoupon()">Áp dụng</button>
+                        </div>
+                        <div id="couponMsg" style="font-size:13px;margin-bottom:8px;color:#d32f2f;display:none"></div>
+
+                        <div class="summary-row" id="discountRow" style="display:none">
+                            <span class="label">Giảm giá</span>
+                            <span class="value" id="summaryDiscount" style="color:#388e3c">0 VNĐ</span>
+                        </div>
+
+                        <div class="summary-total">
+                            <span>Tổng tiền</span>
+                            <span id="summaryTotal">0 VNĐ</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </form>
-</section>
+        </form>
+    </div>
+</div>
 
-{{-- MoMo callback: nếu có transIdMomo thì inject booking data và tự submit --}}
+<script>
+var PRICE_ADULT   = {{ isset($schedule) ? $schedule->priceAdult : $tour->priceAdult }};
+var PRICE_CHILD   = {{ isset($schedule) ? $schedule->priceChild : $tour->priceChild }};
+var numAdults     = 1;
+var numChildren   = 0;
+var discountAmt   = 0;
+
+function fmtMoney(n) { return Number(n).toLocaleString('vi-VN') + ' VNĐ'; }
+
+function updateSummary() {
+    var subAdult   = numAdults * PRICE_ADULT;
+    var subChild   = numChildren * PRICE_CHILD;
+    var total      = Math.max(0, subAdult + subChild - discountAmt);
+
+    document.getElementById('summaryAdults').textContent        = numAdults;
+    document.getElementById('summaryChildren').textContent      = numChildren;
+    document.getElementById('summaryAdultsPrice').textContent   = fmtMoney(subAdult);
+    document.getElementById('summaryChildrenPrice').textContent = fmtMoney(subChild);
+    document.getElementById('summaryTotal').textContent         = fmtMoney(total);
+    document.getElementById('totalPriceInput').value            = total;
+
+    if (discountAmt > 0) {
+        document.getElementById('discountRow').style.display = '';
+        document.getElementById('summaryDiscount').textContent = '- ' + fmtMoney(discountAmt);
+    }
+}
+
+function changeQty(type, delta) {
+    if (type === 'adults') {
+        numAdults = Math.max(1, numAdults + delta);
+        document.getElementById('qtyAdults').textContent = numAdults;
+        document.getElementById('numAdults').value = numAdults;
+    } else {
+        numChildren = Math.max(0, numChildren + delta);
+        document.getElementById('qtyChildren').textContent = numChildren;
+        document.getElementById('numChildren').value = numChildren;
+    }
+    updateSummary();
+}
+
+function applyCoupon() {
+    var code = document.getElementById('couponCode').value.trim();
+    if (!code) return;
+    fetch('/validate-booking', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': '{{ csrf_token() }}'},
+        body: JSON.stringify({coupon_code: code, numAdults, numChildren, tourId: {{ $tour->tourId }} })
+    }).then(r => r.json()).then(data => {
+        var msg = document.getElementById('couponMsg');
+        if (data.success) {
+            msg.style.color = '#388e3c';
+            msg.textContent = '✅ Mã hợp lệ!';
+        } else {
+            msg.style.color = '#d32f2f';
+            msg.textContent = '❌ ' + (data.message || 'Mã không hợp lệ');
+        }
+        msg.style.display = '';
+    });
+}
+
+function goToStep2() {
+    var fullName = document.getElementById('fullName').value.trim();
+    var tel      = document.getElementById('tel').value.trim();
+    var email    = document.getElementById('email').value.trim();
+    var agree    = document.getElementById('agree').checked;
+
+    if (!fullName || !tel || !email) { alert('Vui lòng điền đầy đủ thông tin liên lạc!'); return; }
+    if (!agree) { alert('Vui lòng đồng ý với điều khoản thanh toán!'); return; }
+
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = '';
+    document.getElementById('step1-indicator').classList.remove('active'); document.getElementById('step1-indicator').classList.add('done');
+    document.getElementById('step2-indicator').classList.add('active');
+    window.scrollTo(0, 200);
+}
+
+function goToStep1() {
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = '';
+    document.getElementById('step2-indicator').classList.remove('active');
+    document.getElementById('step1-indicator').classList.remove('done'); document.getElementById('step1-indicator').classList.add('active');
+    window.scrollTo(0, 200);
+}
+
+// Payment method toggle
+document.querySelectorAll('input[name="payment"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.getElementById('payment_hidden').value = this.value;
+        document.getElementById('paypal-button-container').style.display =
+            (this.value === 'paypal-payment') ? '' : 'none';
+        document.getElementById('btn-momo-payment').style.display =
+            (this.value === 'momo-payment') ? '' : 'none';
+        document.getElementById('btnConfirm').style.display =
+            (this.value === 'paypal-payment' || this.value === 'momo-payment') ? 'none' : '';
+    });
+});
+document.getElementById('payment_hidden').value = 'office-payment';
+
+// Form submit via AJAX
+document.getElementById('bookingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btnConfirm');
+    btn.disabled = true; btn.textContent = 'Đang xử lý...';
+
+    fetch('/create-booking', {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            window.location.href = data.redirectUrl;
+        } else {
+            alert(data.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+            btn.disabled = false; btn.textContent = 'Xác nhận đặt tour';
+        }
+    }).catch(() => {
+        alert('Lỗi kết nối!'); btn.disabled = false; btn.textContent = 'Xác nhận đặt tour';
+    });
+});
+
+// MoMo button
+var momoBtn = document.getElementById('btn-momo-payment');
+if (momoBtn) {
+    momoBtn.addEventListener('click', function() {
+        var urlMomo = this.dataset.urlmomo;
+        var amount  = parseInt(document.getElementById('totalPriceInput').value) || 1000;
+        fetch(urlMomo, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+            body: JSON.stringify({ tourId: {{ $tour->tourId }}, amount,
+                fullName: document.getElementById('fullName').value,
+                email:    document.getElementById('email').value,
+                tel:      document.getElementById('tel').value,
+                address:  document.getElementById('address').value,
+                numAdults, numChildren, totalPrice: amount, payment_hidden: 'momo-payment' })
+        }).then(r => r.json()).then(data => {
+            if (data.payUrl) { window.location.href = data.payUrl; }
+            else { alert('Lỗi kết nối MoMo: ' + (data.error || 'Unknown error')); }
+        });
+    });
+}
+
+// Init
+updateSummary();
+</script>
+
+{{-- MoMo callback auto-submit --}}
 @if(!empty($transIdMomo))
 <script>
-    function initializeMomoCallback() {
-        if (typeof jQuery === 'undefined') {
-            setTimeout(initializeMomoCallback, 50);
-            return;
+window.addEventListener('load', function() {
+    var formData = new FormData();
+    formData.append('payment_hidden', 'momo-payment');
+    @if(!empty($momoBookingData))
+    var momoData = @json($momoBookingData);
+    for (var key in momoData) {
+        if (momoData.hasOwnProperty(key)) {
+            formData.append(key, momoData[key]);
         }
-        
-        var $ = jQuery;
-        $(document).ready(function() {
-            var $form = $(".booking-container");
-
-
-        // Inject booking data từ PHP session vào form (không phụ thuộc localStorage)
-        @if(!empty($momoBookingData))
-        var momoData = @json($momoBookingData);
-        $.each(momoData, function(key, val) {
-            $form.find('[name="' + key + '"]').val(val);
-        });
-        // Đảm bảo payment_hidden đúng
-        $form.find('[name="payment_hidden"]').val('momo-payment');
-        @endif
-
-        // Thêm transactionId MoMo
-        $form.append($('<input>', { type: 'hidden', name: 'transactionIdMomo', value: '{{ $transIdMomo }}' }));
-        // Đảm bảo _token có
-        if ($form.find('[name="_token"]').length === 0) {
-            $form.append($('<input>', { type: 'hidden', name: '_token', value: '{{ csrf_token() }}' }));
-        }
-
-        // Hiển thị overlay thông báo thành công
-        $('body').append(
-            '<div id="momo-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;' +
-            'background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;">' +
-            '<div style="background:#fff;border-radius:14px;padding:40px 36px;text-align:center;' +
-            'max-width:440px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.25);">' +
-            '<div style="font-size:60px;margin-bottom:8px;">&#127881;</div>' +
-            '<h3 style="color:#ae2070;margin:0 0 10px;font-size:22px;">Thanh toán MoMo thành công!</h3>' +
-            '<p style="color:#555;margin-bottom:20px;line-height:1.6;">Giao dịch của bạn đã được xác nhận.<br>Hệ thống đang hoàn tất đặt tour cho bạn...</p>' +
-            '<div id="momo-status" style="background:#f0f9f0;border:1px solid #c3e6c3;border-radius:8px;padding:12px;color:#2e7d32;font-weight:600;">' +
-            '<i class="fa fa-spinner fa-spin"></i>&nbsp; Đang xử lý đặt tour...</div>' +
-            '</div></div>'
-        );
-
-        // Tự động submit sau 1 giây
-        setTimeout(function() {
-            var actionUrl = $form.attr("action");
-            $.ajax({
-                url: actionUrl,
-                method: "POST",
-                data: $form.serialize(),
-                success: function(response) {
-                    if (response.success) {
-                        $('#momo-status').html('<i class="fa fa-check-circle"></i>&nbsp; Đặt tour thành công! Đang chuyển hướng...')
-                            .css({'background':'#e8f5e9','border-color':'#a5d6a7','color':'#1b5e20'});
-                        // Xóa session MoMo
-                        session_clear: true;
-                        setTimeout(function() {
-                            window.location.href = response.redirectUrl;
-                        }, 1000);
-                    } else {
-                        $('#momo-overlay').remove();
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error(response.message || 'Đặt tour không thành công. Vui lòng liên hệ hỗ trợ.');
-                        } else {
-                            alert(response.message || 'Đặt tour không thành công. Vui lòng liên hệ hỗ trợ.');
-                        }
-                    }
-                },
-                error: function(xhr) {
-                    $('#momo-overlay').remove();
-                    var msg = xhr.responseJSON && xhr.responseJSON.message
-                              ? xhr.responseJSON.message
-                              : 'Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ: 1800-1234.';
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error(msg);
-                    } else {
-                        alert(msg);
-                    }
-                }
-            });
-        }, 1000);
-    });
     }
-    initializeMomoCallback();
+    @endif
+    formData.append('transactionIdMomo', '{{ $transIdMomo }}');
+
+    fetch('/create-booking', {
+        method: 'POST',
+        body: formData,
+        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            window.location.href = data.redirectUrl;
+        } else {
+            alert('Lỗi tạo đơn hàng: ' + (data.message || 'Không xác định'));
+        }
+    });
+});
 </script>
 @endif
 
-<!-- ✅ NEW: PayPal SDK Script -->
+{{-- PayPal SDK --}}
 @if (!empty($paypalClientId))
 <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD"></script>
-<script>
-    console.log("✅ PayPal SDK loaded with Client ID");
-</script>
-@else
-<script>
-    console.warn("⚠️ PayPal Client ID not configured. PayPal payment will not work.");
-</script>
 @endif
 
 @include('clients.blocks.footer')

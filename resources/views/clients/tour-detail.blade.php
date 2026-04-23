@@ -44,27 +44,27 @@
         <div class="row gap-10 justify-content-center rel">
             <div class="col-lg-4 col-md-6">
                 <div class="gallery-item">
-                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[0] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}"
+                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[0] ?? 'cau-vang-da-nang_1775281412.png')) }}"
                         alt="Tour List">
                 </div>
                 <div class="gallery-item">
-                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[1] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}"
+                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[1] ?? 'ba-na-hill-da-nang-1_1775407853.png')) }}"
                         alt="Tour List">
                 </div>
             </div>
             <div class="col-lg-4 col-md-6">
                 <div class="gallery-item gallery-between">
-                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[2] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}"
+                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[2] ?? 'ba-na-hill-da-nang-1_1775408993.png')) }}"
                         alt="Destination">
                 </div>
             </div>
             <div class="col-lg-4 col-md-6">
                 <div class="gallery-item">
-                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[3] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}"
+                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[3] ?? 'cau-vang-da-nang_1775407854.png')) }}"
                         alt="Destination">
                 </div>
                 <div class="gallery-item">
-                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[4] ?? 'vinh-ha-long-quang-ninh_1735834627.jpg')) }}"
+                    <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tourDetail->images[4] ?? 'ben-trong-ba-na-hills-da-nang_1775407854.png')) }}"
                         alt="Destination">
                 </div>
             </div>
@@ -284,6 +284,70 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8">
+
+                {{-- ====== TAB NAVIGATION (Vanilla JS) ====== --}}
+                <style>
+                /* Custom tab CSS — không phụ thuộc Bootstrap version */
+                .td-nav-tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0;
+                  margin-bottom: 28px; list-style: none; padding: 0; }
+                .td-nav-tabs li { margin: 0; }
+                .td-tab-btn { background: none; border: none; padding: 12px 20px;
+                  font-size: 15px; font-weight: 600; color: #888; cursor: pointer;
+                  border-bottom: 3px solid transparent; margin-bottom: -2px;
+                  transition: all .2s; white-space: nowrap; }
+                .td-tab-btn:hover { color: #1a3a5c; }
+                .td-tab-btn.active { color: #1a3a5c; border-bottom-color: #1a3a5c; }
+                .td-tab-pane { display: none; }
+                .td-tab-pane.active { display: block; }
+                </style>
+                <ul class="td-nav-tabs" id="tourDetailTab">
+                    <li><button class="td-tab-btn active" data-tab="tab-overview">Tổng quan</button></li>
+                    <li><button class="td-tab-btn" data-tab="tab-schedule">📅 Lịch khởi hành</button></li>
+                    <li><button class="td-tab-btn" data-tab="tab-timeline">Lịch trình</button></li>
+                    <li><button class="td-tab-btn" data-tab="tab-reviews">Đánh giá</button></li>
+                </ul>
+                <script>
+                function switchTab(tabId) {
+                    var btn = document.querySelector('.td-tab-btn[data-tab="' + tabId + '"]');
+                    if (btn) btn.click();
+                    window.scrollTo({
+                        top: document.getElementById('tourDetailTab').offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+
+                document.querySelectorAll('.td-tab-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        // Deactivate all
+                        document.querySelectorAll('.td-tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.td-tab-pane').forEach(p => p.classList.remove('active'));
+                        // Activate clicked
+                        this.classList.add('active');
+                        var target = this.dataset.tab;
+                        var pane = document.getElementById(target);
+                        if (pane) pane.classList.add('active');
+                        
+                        // Load calendar when schedule tab opened (always reload if not loaded yet)
+                        if (target === 'tab-schedule' && typeof loadSchedules === 'function') {
+                            loadSchedules();
+                        }
+
+                        // Show/hide sidebar booking widget
+                        var sidebarWidget = document.getElementById('sidebar-booking-widget');
+                        if (sidebarWidget) {
+                            if (target === 'tab-schedule' || target === 'tab-reviews') {
+                                sidebarWidget.style.display = 'none';
+                            } else {
+                                sidebarWidget.style.display = 'block';
+                            }
+                        }
+                    });
+                });
+                </script>
+
+                <div id="td-tab-content">
+                {{-- ====== TAB 1: TỔNG QUAN ====== --}}
+                <div class="td-tab-pane active" id="tab-overview">
                 <div class="tour-details-content">
                     <h3>Khám phá Tours</h3>
                     <p>{!! $tourDetail->description !!} </p>
@@ -318,21 +382,287 @@
                         </div>
                     </div>
                 </div>
+                </div>
+
+                {{-- ====== TAB 2: LỊCH KHỞI HÀNH ====== --}}
+                <div class="td-tab-pane" id="tab-schedule">
+                <style>
+                .schedule-calendar { display: flex; gap: 20px; margin-bottom: 30px; }
+                .month-list { display: flex; flex-direction: column; gap: 8px; min-width: 100px; }
+                .month-btn { background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 14px;
+                  cursor: pointer; font-weight: 600; font-size: 14px; color: #555; transition: all .2s; }
+                .month-btn.active { background: #1a3a5c; color: #fff; }
+                .calendar-wrap { flex: 1; background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; padding: 20px; }
+                .calendar-header { display: flex; align-items: center; justify-content: center;
+                  gap: 16px; margin-bottom: 16px; font-size: 18px; font-weight: 700; color: #1a3a5c; }
+                .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+                .cal-day-name { text-align: center; font-weight: 700; font-size: 13px; padding: 6px 0;
+                  color: #888; }
+                .cal-day-name.weekend { color: #e53935; }
+                .cal-cell { text-align: center; padding: 6px 4px; border-radius: 8px; font-size: 13px;
+                  min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+                .cal-cell.empty { background: transparent; }
+                .cal-cell.has-tour { background: #fff3e0; cursor: pointer; border: 1px solid #ffcc02;
+                  font-weight: 700; color: #d32f2f; transition: all .2s; }
+                .cal-cell.has-tour:hover { background: #d32f2f; color: #fff; transform: scale(1.08); }
+                .cal-cell.has-tour .cal-price { font-size: 10px; color: #e65100; font-weight: 600; margin-top: 2px; }
+                .cal-cell.has-tour:hover .cal-price { color: #ffe082; }
+                .schedule-detail-panel { background: #f8f9fa; border-radius: 12px; border: 1px solid #dee2e6;
+                  padding: 24px; margin-top: 16px; display: none; }
+                .schedule-detail-panel.show { display: block; }
+                .sch-info-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 15px; }
+                .sch-info-row i { width: 20px; color: #1a3a5c; }
+                .sch-price-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+                .sch-price-table td { padding: 10px 14px; border-bottom: 1px solid #e0e0e0; font-size: 15px; }
+                .sch-price-table td:last-child { text-align: right; color: #d32f2f; font-weight: 700; }
+                .btn-book-now { background: #d32f2f; color: #fff; border: none; border-radius: 30px;
+                  padding: 12px 36px; font-size: 16px; font-weight: 700; cursor: pointer;
+                  display: block; width: 100%; margin-top: 16px; text-decoration: none; text-align: center;
+                  transition: background .2s; }
+                .btn-book-now:hover { background: #b71c1c; color: #fff; }
+                </style>
+
+                <div class="schedule-calendar">
+                    <div class="month-list" id="monthList"></div>
+                    <div style="flex:1">
+                        <div class="calendar-wrap">
+                            <div class="calendar-header">
+                                <button onclick="prevMonth()" style="background:none;border:none;font-size:20px;cursor:pointer;">&#8592;</button>
+                                <span id="calTitle">THÁNG 5/2026</span>
+                                <button onclick="nextMonth()" style="background:none;border:none;font-size:20px;cursor:pointer;">&#8594;</button>
+                            </div>
+                            <div class="cal-grid" id="calGrid">
+                                <div class="cal-day-name">T2</div>
+                                <div class="cal-day-name">T3</div>
+                                <div class="cal-day-name">T4</div>
+                                <div class="cal-day-name">T5</div>
+                                <div class="cal-day-name">T6</div>
+                                <div class="cal-day-name weekend">T7</div>
+                                <div class="cal-day-name weekend">CN</div>
+                            </div>
+                        </div>
+                        <div class="schedule-detail-panel" id="scheduleDetailPanel">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                                <button onclick="closeDetail()" style="background:none;border:none;cursor:pointer;color:#555;font-size:14px">&#8592; Quay lại</button>
+                                <span id="detailDate" style="font-size:20px;font-weight:700;color:#d32f2f"></span>
+                            </div>
+                            <div class="sch-info-row"><i class="fas fa-map-marker-alt"></i><span>Khởi hành: <b id="detailDestination"></b></span></div>
+                            <div class="sch-info-row"><i class="fas fa-calendar"></i><span>Ngày đi: <b id="detailStart"></b> &nbsp;—&nbsp; Ngày về: <b id="detailEnd"></b></span></div>
+                            <div class="sch-info-row"><i class="fas fa-clock"></i><span>Thời gian: <b id="detailTime"></b></span></div>
+                            <div class="sch-info-row"><i class="fas fa-users"></i><span>Số chỗ còn lại: <b id="detailQuantity" style="color:#388e3c"></b></span></div>
+                            <div id="detailNote" class="sch-info-row" style="display:none;background:#fff8e1;padding:8px 14px;border-radius:8px;color:#e65100">
+                                <i class="fas fa-info-circle"></i><span id="detailNoteText"></span>
+                            </div>
+                            <table class="sch-price-table">
+                                <tr><td>Người lớn</td><td id="detailPriceAdult"></td></tr>
+                                <tr><td>Trẻ em</td><td id="detailPriceChild"></td></tr>
+                            </table>
+                            <a id="btnBookNow" href="#" class="btn-book-now">Đặt ngay</a>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                var TOUR_ID = {{ $tourDetail->tourId }};
+                var scheduleData = [];
+                var calYear, calMonth;
+                var today = new Date();
+                calYear  = today.getFullYear();
+                calMonth = today.getMonth(); // 0-indexed
+
+                function formatMoney(n) {
+                    return Number(n).toLocaleString('vi-VN') + ' ₫';
+                }
+                function formatDate(d) {
+                    var p = d.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
+                }
+
+                function loadSchedules() {
+                    var calWrap = document.querySelector('.calendar-wrap');
+                    if (calWrap) calWrap.style.opacity = '0.5';
+
+                    fetch('/api/tour-schedules/' + TOUR_ID)
+                        .then(r => r.json())
+                        .then(function(data) {
+                            scheduleData = data;
+                            if (calWrap) calWrap.style.opacity = '1';
+
+                            if (scheduleData.length === 0) {
+                                // Không có lịch khởi hành
+                                buildMonthList();
+                                renderCalendar();
+                                var grid = document.getElementById('calGrid');
+                                var msg = document.getElementById('noScheduleMsg');
+                                if (!msg) {
+                                    msg = document.createElement('div');
+                                    msg.id = 'noScheduleMsg';
+                                    msg.style.cssText = 'text-align:center;padding:40px 20px;color:#888;font-size:15px;';
+                                    msg.innerHTML = '<i class="fas fa-calendar-times" style="font-size:36px;color:#ccc;display:block;margin-bottom:12px;"></i>Tour này chưa có lịch khởi hành.<br><span style="font-size:13px;">Vui lòng liên hệ để được tư vấn.</span>';
+                                    grid.parentNode.insertBefore(msg, grid.nextSibling);
+                                }
+                                return;
+                            }
+
+                            // Xóa thông báo cũ nếu có
+                            var oldMsg = document.getElementById('noScheduleMsg');
+                            if (oldMsg) oldMsg.remove();
+
+                            buildMonthList();
+
+                            // Tự động nhảy đến tháng đầu tiên có lịch nếu tháng hiện tại không có
+                            var hasThisMonth = scheduleData.some(function(s) {
+                                var d = parseScheduleDate(s.startDate);
+                                return d.y === calYear && d.m === calMonth;
+                            });
+
+                            if (!hasThisMonth && scheduleData.length > 0) {
+                                // Sắp xếp theo startDate và lấy tháng đầu tiên
+                                var sorted = scheduleData.slice().sort(function(a,b){
+                                    return a.startDate.localeCompare(b.startDate);
+                                });
+                                var first = parseScheduleDate(sorted[0].startDate);
+                                calYear  = first.y;
+                                calMonth = first.m;
+                                // Cập nhật active button trong monthList
+                                document.querySelectorAll('.month-btn').forEach(function(b) {
+                                    b.classList.toggle('active',
+                                        b.textContent === (calMonth+1)+'/'+calYear);
+                                });
+                            }
+
+                            renderCalendar();
+                        })
+                        .catch(function() {
+                            if (calWrap) calWrap.style.opacity = '1';
+                        });
+                }
+
+                // Helper: parse date string 'YYYY-MM-DD' an toàn (tránh lỗi timezone UTC)
+                function parseScheduleDate(str) {
+                    var p = str.split('-');
+                    return { y: parseInt(p[0],10), m: parseInt(p[1],10)-1, d: parseInt(p[2],10) };
+                }
+
+                function buildMonthList() {
+                    // Sắp xếp các tháng theo thứ tự thời gian
+                    var months = {};
+                    scheduleData.forEach(function(s) {
+                        var pd = parseScheduleDate(s.startDate);
+                        var key = pd.y + '-' + String(pd.m+1).padStart(2,'0');
+                        months[key] = {y: pd.y, m: pd.m};
+                    });
+                    var list = document.getElementById('monthList');
+                    list.innerHTML = '';
+                    // Sắp xếp key để hiển thị đúng thứ tự
+                    Object.keys(months).sort().forEach(function(key) {
+                        var v = months[key];
+                        var btn = document.createElement('button');
+                        btn.className = 'month-btn' + (v.y===calYear && v.m===calMonth ? ' active' : '');
+                        btn.textContent = (v.m+1)+'/'+v.y;
+                        btn.onclick = function() {
+                            calYear=v.y; calMonth=v.m;
+                            document.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));
+                            btn.classList.add('active');
+                            closeDetail(); renderCalendar();
+                        };
+                        list.appendChild(btn);
+                    });
+                }
+
+                function renderCalendar() {
+                    var months = ['THÁNG 1','THÁNG 2','THÁNG 3','THÁNG 4','THÁNG 5','THÁNG 6',
+                                  'THÁNG 7','THÁNG 8','THÁNG 9','THÁNG 10','THÁNG 11','THÁNG 12'];
+                    document.getElementById('calTitle').textContent = months[calMonth] + '/' + calYear;
+
+                    // Map startDate -> schedule (dùng parseScheduleDate tránh lỗi timezone)
+                    var schedMap = {};
+                    scheduleData.forEach(function(s) {
+                        var pd = parseScheduleDate(s.startDate);
+                        if (pd.y === calYear && pd.m === calMonth) {
+                            schedMap[pd.d] = s;
+                        }
+                    });
+
+                    var firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+                    firstDay = firstDay === 0 ? 6 : firstDay - 1; // Mon=0
+                    var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+                    var grid = document.getElementById('calGrid');
+                    // Remove old day cells (keep headers = first 7 children)
+                    while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+                    // Empty cells before 1st
+                    for (var i = 0; i < firstDay; i++) {
+                        var e = document.createElement('div'); e.className='cal-cell empty'; grid.appendChild(e);
+                    }
+                    for (var d = 1; d <= daysInMonth; d++) {
+                        var cell = document.createElement('div');
+                        if (schedMap[d]) {
+                            cell.className = 'cal-cell has-tour';
+                            cell.innerHTML = d + '<div class="cal-price">' +
+                                Number(schedMap[d].priceAdult/1000).toLocaleString('vi') + 'K</div>';
+                            (function(s){ cell.onclick = function(){ showDetail(s); }; })(schedMap[d]);
+                        } else {
+                            cell.className = 'cal-cell';
+                            cell.textContent = d;
+                        }
+                        grid.appendChild(cell);
+                    }
+                }
+
+                function showDetail(s) {
+                    document.getElementById('detailDate').textContent =
+                        formatDate(s.startDate);
+                    document.getElementById('detailDestination').textContent =
+                        '{{ $tourDetail->destination }}';
+                    document.getElementById('detailStart').textContent = formatDate(s.startDate);
+                    document.getElementById('detailEnd').textContent   = formatDate(s.endDate);
+                    document.getElementById('detailTime').textContent  = s.note ? s.note : '{{ $tourDetail->time }}';
+                    document.getElementById('detailQuantity').textContent = s.quantity + ' chỗ';
+                    document.getElementById('detailPriceAdult').textContent = formatMoney(s.priceAdult);
+                    document.getElementById('detailPriceChild').textContent = formatMoney(s.priceChild);
+                    if (s.note) {
+                        document.getElementById('detailNote').style.display = 'flex';
+                        document.getElementById('detailNoteText').textContent = s.note;
+                    } else {
+                        document.getElementById('detailNote').style.display = 'none';
+                    }
+                    document.getElementById('btnBookNow').href =
+                        '/booking-schedule/' + s.scheduleId;
+                    document.getElementById('scheduleDetailPanel').classList.add('show');
+                }
+
+                function closeDetail() {
+                    document.getElementById('scheduleDetailPanel').classList.remove('show');
+                }
+                function prevMonth() {
+                    calMonth--; if(calMonth<0){calMonth=11;calYear--;}
+                    closeDetail(); renderCalendar();
+                }
+                function nextMonth() {
+                    calMonth++; if(calMonth>11){calMonth=0;calYear++;}
+                    closeDetail(); renderCalendar();
+                }
+
+                // (Tab loading được xử lý trong event listener ở trên - không cần Bootstrap handler)
+                </script>
+                </div>{{-- end #tab-schedule --}}
+
+                {{-- ====== TAB 3: LỊCH TRÌNH ====== --}}
+                <div class="td-tab-pane" id="tab-timeline">
                 <h3>Lịch trình</h3>
-                <div class="accordion-two mt-25 mb-60" id="faq-accordion-two">
-                    @php
-                        $day = 1;
-                    @endphp
+                <div class="accordion-two mt-25 mb-60" id="faq-accordion-timeline">
+                    @php $day2 = 1; @endphp
                     @foreach ($tourDetail->timeline as $timeline)
                         <div class="accordion-item">
                             <h5 class="accordion-header">
                                 <button class="accordion-button collapsed" data-bs-toggle="collapse"
-                                    data-bs-target="#collapseTwo{{ $timeline->timelineId }}">
-                                    Ngày {{ $day++ }} - {{ $timeline->title }}
+                                    data-bs-target="#collapseT{{ $timeline->timelineId }}">
+                                    Ngày {{ $day2++ }} - {{ $timeline->title }}
                                 </button>
                             </h5>
-                            <div id="collapseTwo{{ $timeline->timelineId }}" class="accordion-collapse collapse"
-                                data-bs-parent="#faq-accordion-two">
+                            <div id="collapseT{{ $timeline->timelineId }}" class="accordion-collapse collapse"
+                                data-bs-parent="#faq-accordion-timeline">
                                 <div class="accordion-body">
                                     <p>{!! $timeline->description !!}</p>
                                 </div>
@@ -340,15 +670,16 @@
                         </div>
                     @endforeach
                 </div>
+                </div>{{-- end #tab-timeline --}}
 
+                {{-- ====== TAB 4: ĐÁNH GIÁ ====== --}}
+                <div class="td-tab-pane" id="tab-reviews">
                 <div id="partials_reviews">
                     @include('clients.partials.reviews')
                 </div>
-
                 <h3 class="{{ $checkDisplay }}">Thêm Đánh giá</h3>
                 <form id="comment-form" class="comment-form bgc-lighter z-1 rel mt-30 {{ $checkDisplay }}"
-                    name="review-form" action="{{ route('reviews') }}" method="post" data-aos="fade-up"
-                    data-aos-duration="1500" data-aos-offset="50">
+                    name="review-form" action="{{ route('reviews') }}" method="post">
                     @csrf
                     <div class="comment-review-wrap">
                         <div class="comment-ratting-item">
@@ -361,16 +692,14 @@
                                 <i class="far fa-star" data-value="5"></i>
                             </div>
                         </div>
-
                     </div>
                     <hr class="mt-30 mb-40">
                     <h5>Để lại phản hồi</h5>
                     <div class="row gap-20 mt-20">
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label for="message">Nội dung</label>
-                                <textarea name="message" id="message" class="form-control" rows="5"
-                                    required=""></textarea>
+                                <label for="message2">Nội dung</label>
+                                <textarea name="message" id="message2" class="form-control" rows="5" required></textarea>
                             </div>
                         </div>
                         <div class="col-md-12">
@@ -385,14 +714,17 @@
                         </div>
                     </div>
                 </form>
+                </div>{{-- end #tab-reviews --}}
 
-            </div>
+                </div>{{-- end td-tab-content --}}
+
+            </div>{{-- end col-lg-8 --}}
             <div class="col-lg-4 col-md-8 col-sm-10 rmt-75">
                 <div class="blog-sidebar tour-sidebar">
 
-                    <div class="widget widget-booking" data-aos="fade-up" data-aos-duration="1500" data-aos-offset="50">
+                    <div id="sidebar-booking-widget" class="widget widget-booking" data-aos="fade-up" data-aos-duration="1500" data-aos-offset="50">
                         <h5 class="widget-title">Tour Booking</h5>
-                        <form action="{{ route('booking', ['id' => $tourDetail->tourId]) }}" method="POST">
+                        <form action="javascript:void(0);" method="POST">
                             @csrf
                             <div class="date mb-25">
                                 <b>Ngày bắt đầu</b>
@@ -425,7 +757,7 @@
                                     </span>
                                 </li>
                             </ul>
-                            <button type="submit" class="theme-btn style-two w-100 mt-15 mb-5">
+                            <button type="button" onclick="switchTab('tab-schedule')" class="theme-btn style-two w-100 mt-15 mb-5">
                                 <span data-hover="Đặt ngay">Đặt ngay</span>
                                 <i class="fal fa-arrow-right"></i>
                             </button>

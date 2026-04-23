@@ -69,7 +69,20 @@
                                                 <b>Mã hóa đơn #{{ $invoice_booking->checkoutId }}</b>
                                                 <br>
                                                 <br>
-                                                <b>Mã giao dịch:</b> {{ $invoice_booking->transactionId }}
+                                                <b>Mã giao dịch:</b>
+                                                @php
+                                                    $txId = $invoice_booking->transactionId ?? null;
+                                                    if (empty($txId)) {
+                                                        if ($invoice_booking->paymentMethod === 'momo-payment') {
+                                                            $txId = 'Thanh toán qua MoMo';
+                                                        } elseif ($invoice_booking->paymentMethod === 'paypal-payment') {
+                                                            $txId = 'Thanh toán qua PayPal';
+                                                        } else {
+                                                            $txId = 'Thanh toán tại công ty Travela';
+                                                        }
+                                                    }
+                                                @endphp
+                                                {{ $txId }}
                                                 <br>
                                                 <b>Ngày thanh toán:</b>
                                                 {{ $invoice_booking->created_at ?? 'Đang chờ cập nhật' }}

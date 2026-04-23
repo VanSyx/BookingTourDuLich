@@ -33,6 +33,7 @@
                         <ul class="nav child_menu">
                             <li><a href="{{ route('admin.page-add-tours') }}">Thêm Tours</a></li>
                             <li><a href="{{ route('admin.tours') }}">Danh sách Tours</a></li>
+                            <li><a href="{{ route('admin.tour-schedules') }}">📅 Lịch khởi hành</a></li>
                         </ul>
                     </li>
 

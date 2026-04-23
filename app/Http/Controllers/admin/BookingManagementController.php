@@ -63,15 +63,18 @@ class BookingManagementController extends Controller
         $title = 'Chi tiết đơn đặt';
 
         $invoice_booking = $this->booking->getInvoiceBooking($bookingId);
-        // dd($invoice_booking);
-        $hide='hide';
-        if ($invoice_booking->transactionId == null) {
+        $hide = 'hide';
+
+        // transactionId không có trong DB → fallback an toàn
+        $transactionId = $invoice_booking->transactionId ?? null;
+        if (!$transactionId) {
             $invoice_booking->transactionId = 'Thanh toán tại công ty Travela';
         }
-        if ($invoice_booking->paymentStatus === 'n') {
+
+        if (($invoice_booking->paymentStatus ?? 'n') === 'n') {
             $hide = '';
         }
-        return view('admin.booking-detail', compact('title', 'invoice_booking','hide'));
+        return view('admin.booking-detail', compact('title', 'invoice_booking', 'hide'));
     }
 
 
@@ -82,7 +85,8 @@ class BookingManagementController extends Controller
         $title = 'Hóa đơn';
         $invoice_booking = $this->booking->getInvoiceBooking($bookingId);
 
-        if ($invoice_booking->transactionId == null) {
+        // transactionId không có trong DB → fallback an toàn
+        if (empty($invoice_booking->transactionId ?? null)) {
             $invoice_booking->transactionId = 'Thanh toán tại công ty Travela';
         }
 

@@ -38,23 +38,41 @@ class User extends Model
 
     public function getMyTours($id)
     {
-        $myTours =  DB::table('tbl_booking')
-        ->join('tbl_tours', 'tbl_booking.tourId', '=', 'tbl_tours.tourId')
-        ->join('tbl_checkout', 'tbl_booking.bookingId', '=', 'tbl_checkout.bookingId')
-        ->where('tbl_booking.userId', $id)
-        ->orderByDesc('tbl_booking.bookingDate')
-        ->take(3)
-        ->get();
+        $myTours = DB::table('tbl_booking')
+            ->join('tbl_tours',    'tbl_booking.tourId',    '=', 'tbl_tours.tourId')
+            ->join('tbl_checkout', 'tbl_booking.bookingId', '=', 'tbl_checkout.bookingId')
+            ->where('tbl_booking.userId', $id)
+            ->select(
+                'tbl_booking.bookingId',
+                'tbl_booking.tourId',
+                'tbl_booking.fullName',
+                'tbl_booking.email',
+                'tbl_booking.phoneNumber',
+                'tbl_booking.numAdults',
+                'tbl_booking.numChildren',
+                'tbl_booking.totalPrice',
+                'tbl_booking.bookingStatus',
+                'tbl_booking.bookingDate',
+                'tbl_checkout.checkoutId',
+                'tbl_checkout.paymentStatus',
+                'tbl_checkout.paymentMethod',
+                'tbl_tours.title',
+                'tbl_tours.description',
+                'tbl_tours.destination',
+                'tbl_tours.time',
+                'tbl_tours.startDate',
+                'tbl_tours.endDate',
+                'tbl_tours.priceAdult',
+                'tbl_tours.priceChild'
+            )
+            ->orderByDesc('tbl_booking.bookingDate')
+            ->get();
 
         foreach ($myTours as $tour) {
-            // Lấy rating từ tbl_reviews cho mỗi tour
             $tour->rating = DB::table('tbl_reviews')
                 ->where('tourId', $tour->tourId)
                 ->where('userId', $id)
-                ->value('rating'); // Dùng value() để lấy giá trị rating
-        }
-        foreach ($myTours as $tour) {
-            // Lấy danh sách hình ảnh thuộc về tour
+                ->value('rating');
             $tour->images = DB::table('tbl_images')
                 ->where('tourId', $tour->tourId)
                 ->pluck('imageUrl');

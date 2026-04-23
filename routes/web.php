@@ -6,6 +6,7 @@ use App\Http\Controllers\admin\ContactManagementController;
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\admin\LoginAdminController;
 use App\Http\Controllers\admin\ToursManagementController;
+use App\Http\Controllers\admin\TourScheduleController;
 use App\Http\Controllers\admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
@@ -67,6 +68,7 @@ Route::post('/change-avatar-profile', [UserProfileController::class, 'changeAvat
 
 //Hanlde checkout
 Route::post('/booking/{id?}', [BookingController::class, 'index'])->name('booking')->middleware('checkLoginClient');
+Route::get('/booking-schedule/{scheduleId}', [BookingController::class, 'bookingBySchedule'])->name('booking-schedule')->middleware('checkLoginClient');
 Route::post('/validate-booking', [BookingController::class, 'validateBooking'])->name('validate-booking');
 Route::post('/create-booking', [BookingController::class, 'createBooking'])->name('create-booking');
 Route::get('/booking', [BookingController::class, 'handlePaymentMomoCallback'])->name('handlePaymentMomoCallback');
@@ -101,6 +103,10 @@ Route::post('/create-contact', [ContactController::class, 'createContact'])->nam
 //Search 
 Route::get('/search', [SearchController::class, 'index'])->name(name: 'search');
 Route::get('/search-voice-text', [SearchController::class, 'searchTours'])->name('search-voice-text');
+
+// API: Tour Schedules (public - dùng cho calendar)
+Route::get('/api/tour-schedules/{tourId}', [TourScheduleController::class, 'apiGetSchedules'])->name('api.tour-schedules');
+Route::get('/api/schedule-detail/{scheduleId}', [TourScheduleController::class, 'apiGetScheduleDetail'])->name('api.schedule-detail');
 
 //Wishlist (auth check được thực hiện bên trong controller để trả JSON thay vì redirect)
 Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
@@ -138,6 +144,12 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::post('/add-timeline', [ToursManagementController::class, 'addTimeline'])->name('admin.add-timeline');
 
     Route::post('/delete-tour', [ToursManagementController::class, 'deleteTour'])->name('admin.delete-tour');
+
+    // Tour Schedules
+    Route::get('/tour-schedules', [TourScheduleController::class, 'index'])->name('admin.tour-schedules');
+    Route::post('/tour-schedules/store', [TourScheduleController::class, 'store'])->name('admin.tour-schedules.store');
+    Route::post('/tour-schedules/update', [TourScheduleController::class, 'update'])->name('admin.tour-schedules.update');
+    Route::post('/tour-schedules/destroy', [TourScheduleController::class, 'destroy'])->name('admin.tour-schedules.destroy');
 
     Route::get('/tour-edit', [ToursManagementController::class, 'getTourEdit'])->name('admin.tour-edit');
     Route::post('/edit-tour', [ToursManagementController::class, 'updateTour'])->name('admin.edit-tour');

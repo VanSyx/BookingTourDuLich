@@ -133,16 +133,19 @@
                                 <li class="drop-down">
                                     <button class="dropdown-toggle bg-transparent" id="userDropdown"
                                         style="color: black">
-                                        @if (session()->has('avatar'))
-                                            @php
-                                                $avatar = session()->get('avatar', 'user_avatar.jpg');
-                                            @endphp
-                                            <img id="avatarPreview" class="img-account-profile rounded-circle"
-                                                src="{{ asset('admin/assets/images/user-profile/' . $avatar) }}"
-                                                style="width: 36px; height: 36px;">
-                                        @else
-                                            <i class='bx bxs-user bx-tada' style="font-size: 36px; color: black;"></i>
-                                        @endif
+                            @if (session()->has('avatar'))
+                                @php
+                                    $avatar = session()->get('avatar', 'user_avatar.jpg');
+                                @endphp
+                                <img id="avatarPreview" class="img-account-profile rounded-circle"
+                                    src="{{ asset('admin/assets/images/user-profile/' . $avatar) }}"
+                                    style="width:38px;height:38px;object-fit:cover;border:2.5px solid #1a3a5c;box-shadow:0 2px 8px rgba(26,58,92,.2);transition:transform .2s;"
+                                    onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                            @else
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#0d6efd);box-shadow:0 2px 8px rgba(26,58,92,.25);transition:transform .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class='bx bxs-user' style="font-size:20px;color:#fff;"></i>
+                                </span>
+                            @endif
                                     </button>
 
                                     <ul class="dropdown-menu" id="dropdownMenu">

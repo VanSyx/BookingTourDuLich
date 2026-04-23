@@ -399,55 +399,63 @@ $(document).ready(function () {
         }
     });
 
-    //Update avatar
-    $("#avatar").on("change", function () {
-        const file = event.target.files[0];
+    // ── Avatar upload (hỗ trợ cả id="avatar" và id="avatarInput") ──────────
+    function handleAvatarChange(inputEl) {
+        var file = inputEl.files[0];
+        if (!file) return;
 
-        if (file) {
-            // Hiển thị ảnh vừa chọn trước khi gửi lên server
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                $("#avatarPreview").attr("src", e.target.result);
-                $(".img-account-profile").attr("src", e.target.result);
-            };
-            reader.readAsDataURL(file);
-            var __token = $(this)
-                .closest(".card-body")
-                .find("input.__token")
-                .val();
-            var url_avatar = $(this)
-                .closest(".card-body")
-                .find("input.label_avatar")
-                .val();
-            // Tạo FormData để gửi file qua AJAX
-            const formData = new FormData();
-            formData.append("avatar", file);
+        // Preview ngay
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            // Cập nhật tất cả ảnh avatar trên trang (profile + header)
+            $('#avatarPreview, .img-account-profile').attr('src', e.target.result);
+        };
+        reader.readAsDataURL(file);
 
-            console.log(url_avatar);
+        // Lấy token và URL từ hidden inputs gần nhất (trong cùng container)
+        var $container = $(inputEl).closest('.profile-avatar-wrap, .card-body');
+        var __token    = $container.find('input.__token').val()
+                      || $('meta[name="csrf-token"]').attr('content');
+        var url_avatar = $container.find('input.label_avatar').val();
 
-            // // Gửi AJAX đến server
-            $.ajax({
-                url: url_avatar,
-                type: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": __token,
-                },
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (response) {
-                    if (response.success) {
-                        toastr.success(response.message);
-                    } else {
-                        toastr.error(response.message);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    toastr.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
-                },
-            });
+        if (!url_avatar) {
+            console.warn('Avatar upload URL not found');
+            return;
         }
+
+        var formData = new FormData();
+        formData.append('avatar', file);
+
+        $.ajax({
+            url: url_avatar,
+            type: 'POST',
+            headers: { 'X-CSRF-TOKEN': __token },
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                } else {
+                    toastr.error(response.message);
+                }
+            },
+            error: function() {
+                toastr.error('Có lỗi xảy ra khi tải ảnh. Vui lòng thử lại.');
+            }
+        });
+    }
+
+    // Bind cả 2 id
+    $('#avatar').on('change', function() { handleAvatarChange(this); });
+    $('#avatarInput').on('change', function() { handleAvatarChange(this); });
+
+    // Fallback: nếu ảnh avatar bị lỗi → dùng ảnh mặc định
+    $(document).on('error', '#avatarPreview, .img-account-profile', function() {
+        $(this).attr('src', '/admin/assets/images/user-profile/user_avatar.jpg');
     });
+
+
 
     /****************************************
      *             PAGE BOOKING             *

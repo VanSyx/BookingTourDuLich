@@ -2290,7 +2290,8 @@ function init_SmartWizard() {
                     var endDateFormatted = new Date(convertDateFormat(endDate));
 
                     var timeDifference = endDateFormatted - startDateFormatted;
-                    daysDifference = timeDifference / (1000 * 3600 * 24);
+                    // +1 vì tính cả ngày đầu và ngày cuối (khớp với backend)
+                    daysDifference = (timeDifference / (1000 * 3600 * 24)) + 1;
 
                     var today = new Date();
                     today.setHours(0, 0, 0, 0);
@@ -2325,13 +2326,20 @@ function init_SmartWizard() {
                     return false;
                 }
 
+                // Validate số lượng trước khi gửi AJAX
+                var numberVal = parseInt($("input[name='number']").val(), 10);
+                if (isNaN(numberVal) || numberVal < 1 || numberVal > 9999999) {
+                    toastr.error("Số lượng phải từ 1 đến 9,999,999!");
+                    return false;
+                }
+
                 // Gửi AJAX tạo tour (KHÔNG cho chuyển bước ngay — đợi response)
                 var formActionUrl = $("#form-step1").attr("action");
                 var formData = {
                     name: $("input[name='name']").val(),
                     destination: $("input[name='destination']").val(),
                     domain: $("#domain").val(),
-                    number: $("input[name='number']").val(),
+                    number: numberVal,
                     price_adult: $("input[name='price_adult']").val(),
                     price_child: $("input[name='price_child']").val(),
                     start_date: $("#start_date").val(),
@@ -2358,7 +2366,16 @@ function init_SmartWizard() {
                         }
                     },
                     error: function (xhr, textStatus, errorThrown) {
-                        toastr.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
+                        var errMsg = "Có lỗi xảy ra. Vui lòng thử lại sau.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            // Laravel validation errors
+                            var errors = xhr.responseJSON.errors;
+                            var firstKey = Object.keys(errors)[0];
+                            if (firstKey) errMsg = errors[firstKey][0];
+                        }
+                        toastr.error(errMsg);
                     },
                 });
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\admin\ToursModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Intervention\Image\Facades\Image;
 
 class ToursManagementController extends Controller
@@ -33,55 +34,83 @@ class ToursManagementController extends Controller
 
     public function addTours(Request $request)
     {
+        // Validation đầu vào để tránh lỗi DB
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'destination' => 'required|string|max:255',
+            'domain'      => 'required|in:b,t,n',
+            'number'      => 'required|integer|min:1|max:9999999',
+            'price_adult' => 'required|numeric|min:0|max:999999999',
+            'price_child' => 'required|numeric|min:0|max:999999999',
+            'start_date'  => 'required',
+            'end_date'    => 'required',
+            'description' => 'required',
+        ]);
+
         $name = $request->input('name');
         $destination = $request->input('destination');
         $domain = $request->input('domain');
-        $quantity = $request->input('number');
+        $quantity = (int) $request->input('number');
         $price_adult = $request->input('price_adult');
         $price_child = $request->input('price_child');
         $start_date = $request->input('start_date');
         $end_date = $request->input('end_date');
         $description = $request->input('description');
 
+        try {
+            // Chuyển start_date và end_date từ định dạng d/m/Y sang Y-m-d
+            $startDate = Carbon::createFromFormat('d/m/Y', $start_date)->format('Y-m-d');
+            $endDate   = Carbon::createFromFormat('d/m/Y', $end_date)->format('Y-m-d');
 
-        // Chuyển start_date và end_date từ định dạng d/m/Y sang Y-m-d
-        $startDate = Carbon::createFromFormat('d/m/Y', $start_date)->format('Y-m-d');
-        $endDate = Carbon::createFromFormat('d/m/Y', $end_date)->format('Y-m-d');
+            // Tính số ngày thực tế của tour (cộng thêm 1 vì tính cả ngày đầu và ngày cuối)
+            $days   = Carbon::createFromFormat('Y-m-d', $startDate)->diffInDays(Carbon::createFromFormat('Y-m-d', $endDate)) + 1;
+            $nights = $days - 1;
 
-        // Tính số ngày giữa start_date và end_date
-        $days = Carbon::createFromFormat('Y-m-d', $startDate)->diffInDays(Carbon::createFromFormat('Y-m-d', $endDate));
+            // Định dạng thời gian theo kiểu "X ngày Y đêm"
+            $time = "{$days} ngày {$nights} đêm";
 
-        // Tính số đêm: số ngày - 1
-        $nights = $days - 1;
+            $dataTours = [
+                'title'       => $name,
+                'time'        => $time,
+                'description' => $description,
+                'quantity'    => $quantity,
+                'priceAdult'  => $price_adult,
+                'priceChild'  => $price_child,
+                'destination' => $destination,
+                'domain'      => $domain,
+                'availability' => 0,
+                'startDate'   => $startDate,
+                'endDate'     => $endDate,
+            ];
 
-        // Định dạng thời gian theo kiểu "X ngày Y đêm"
-        $time = "{$days} ngày {$nights} đêm";
+            $createTour = $this->tours->createTours($dataTours);
 
+            // Tự động tạo lịch khởi hành mặc định từ startDate/endDate của tour
+            DB::table('tbl_tour_schedules')->insert([
+                'tourId'     => $createTour,
+                'startDate'  => $startDate,
+                'endDate'    => $endDate,
+                'priceAdult' => $price_adult,
+                'priceChild' => $price_child,
+                'quantity'   => $quantity,
+                'note'       => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        $dataTours = [
-            'title' => $name,
-            'time' => $time,
-            'description' => $description,
-            'quantity' => $quantity,
-            'priceAdult' => $price_adult,
-            'priceChild' => $price_child,
-            'destination' => $destination,
-            'domain' => $domain,
-            'availability' => 0,
-            'startDate' => $startDate,
-            'endDate' => $endDate
-        ];
-        // dd($dataTours);
+            return response()->json([
+                'success' => true,
+                'message' => 'Tour đã được thêm thành công!',
+                'tourId'  => $createTour,
+            ]);
 
-        $createTour = $this->tours->createTours($dataTours);
-
-        // dd($createTour);
-        return response()->json([
-            'success' => true,
-            'message' => 'Tour added successfully!',
-            'tourId' => $createTour
-        ]);
-
+        } catch (\Exception $e) {
+            \Log::error('addTours error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi thêm tour: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function addImagesTours(Request $request)

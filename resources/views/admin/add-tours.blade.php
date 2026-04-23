@@ -109,7 +109,7 @@
                                                     <span>*</span></label>
                                                 <div class="col-md-6 col-sm-6">
                                                     <input class="form-control" type="number" name="number"
-                                                        required>
+                                                        min="1" max="9999999" required>
                                                 </div>
                                             </div>
                                             <div class="field item form-group">
@@ -118,7 +118,7 @@
                                                     <span>*</span></label>
                                                 <div class="col-md-6 col-sm-6">
                                                     <input class="form-control" type="number" name="price_adult"
-                                                        required>
+                                                        min="0" max="999999999" required>
                                                 </div>
                                             </div>
                                             <div class="field item form-group">
@@ -126,7 +126,7 @@
                                                     <span>*</span></label>
                                                 <div class="col-md-6 col-sm-6">
                                                     <input class="form-control" type="number" name="price_child"
-                                                        required>
+                                                        min="0" max="999999999" required>
                                                 </div>
                                             </div>
                                             <div class="field item form-group">

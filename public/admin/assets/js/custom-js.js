@@ -322,6 +322,10 @@ $(document).ready(function () {
 
         // Khởi tạo Dropzone
         Dropzone.autoDiscover = false; // Ngăn Dropzone tự động init
+        var myDropzoneEl = document.getElementById("myDropzone-listTour");
+        if (myDropzoneEl && myDropzoneEl.dropzone) {
+            myDropzoneEl.dropzone.destroy();
+        }
         dropzoneOldImages = new Dropzone("#myDropzone-listTour", {
             url: "/admin/add-temp-images", // Sử dụng relative URL thay vì hardcode hostname
             method: "post",

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\clients;
 use App\Http\Controllers\Controller;
 use App\Models\clients\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserProfileController extends Controller
 {
@@ -18,9 +19,19 @@ class UserProfileController extends Controller
     {
         $title = 'Thông tin cá nhân';
         $userId = $this->getUserId();
-        $user = $this->user->getUser($userId);
-        // dd( $userId );
-        return view('clients.user-profile', compact('title', 'user'));
+        $user   = $this->user->getUser($userId);
+
+        // Thống kê tour
+        $tourCount      = DB::table('tbl_booking')
+            ->where('userId', $userId)
+            ->whereIn('bookingStatus', ['b', 'y', 'f'])
+            ->count();
+        $completedCount = DB::table('tbl_booking')
+            ->where('userId', $userId)
+            ->where('bookingStatus', 'f')
+            ->count();
+
+        return view('clients.user-profile', compact('title', 'user', 'tourCount', 'completedCount'));
     }
 
     public function update(Request $req)

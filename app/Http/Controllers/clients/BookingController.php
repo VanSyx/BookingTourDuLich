@@ -48,6 +48,28 @@ class BookingController extends Controller
         return view('clients.booking', compact('title', 'tour', 'transIdMomo', 'paypalClientId'));
     }
 
+    // Booking theo lịch khởi hành cụ thể (từ calendar)
+    public function bookingBySchedule($scheduleId)
+    {
+        $schedule = DB::table('tbl_tour_schedules')->where('scheduleId', $scheduleId)->first();
+
+        if (!$schedule) {
+            return redirect()->route('tours')->with('error', 'Không tìm thấy lịch khởi hành.');
+        }
+
+        $tour = $this->tour->getTourDetail($schedule->tourId);
+        if (!$tour) {
+            return redirect()->route('tours')->with('error', 'Không tìm thấy thông tin tour.');
+        }
+
+        $title = 'Đặt Tour — ' . $tour->title;
+        $transIdMomo = null;
+        $paypalMode = config('paypal.mode', 'sandbox');
+        $paypalClientId = config('paypal.' . $paypalMode . '.client_id', '');
+
+        return view('clients.booking', compact('title', 'tour', 'schedule', 'transIdMomo', 'paypalClientId'));
+    }
+
     public function validateBooking(Request $req)
     {
         $numAdults = (int) $req->input('numAdults');
@@ -252,20 +274,17 @@ class BookingController extends Controller
         // Keep as 'n' until admin marks received
 
         $dataCheckout = [
-            'bookingId' => $bookingId,
+            'bookingId'     => $bookingId,
             'paymentMethod' => $paymentMethod,
-            'amount' => $totalPrice,
-            'paymentStatus' => $paymentStatus, // ✅ Uses corrected logic
+            'amount'        => $totalPrice,
+            'paymentStatus' => $paymentStatus,
         ];
 
-        if ($paymentMethod === 'paypal-payment') {
-            $dataCheckout['transactionId'] = $req->transactionIdPaypal ?? null;
-        } elseif ($paymentMethod === 'momo-payment') {
-            $dataCheckout['transactionId'] = $req->transactionIdMomo ?? null;
-        } else if ($paymentMethod === 'cash' || $paymentMethod === 'office') {
-            // ✅ NEW: Generate reference code for cash payment
-            // Format: CASH-20260402120530-12345
-            $dataCheckout['transactionId'] = 'CASH-' . date('YmdHis') . '-' . $bookingId;
+        // Ghi log transactionId để đối chiếu nếu cần (cột không có trong DB)
+        if ($paymentMethod === 'paypal-payment' && !empty($req->transactionIdPaypal)) {
+            \Log::info('PayPal transactionId: ' . $req->transactionIdPaypal . ' bookingId: ' . $bookingId);
+        } elseif ($paymentMethod === 'momo-payment' && !empty($req->transactionIdMomo)) {
+            \Log::info('MoMo transactionId: ' . $req->transactionIdMomo . ' bookingId: ' . $bookingId);
         }
 
         $checkoutId = $this->checkout->createCheckout($dataCheckout);
@@ -430,42 +449,107 @@ class BookingController extends Controller
         $transIdMomo = $request->query('transId');
 
         $tourId = session()->get('tourId');
-        $tour = $this->tour->getTourDetail($tourId);
-
-        if (!$tour) {
-            return redirect()->route('tours')->with('error', 'Phiên giao dịch đã hết hạn hoặc không tìm thấy thông tin tour. Vui lòng đặt lại.');
-        }
-
-        // Lấy booking data đã lưu trong session
         $momoBookingData = session()->get('momoBookingData', []);
 
-        // Giữ lại session cho createBooking sử dụng (xóa sau khi createBooking xong)
-        session()->forget('tourId');
+        // Xóa session ngay để tránh tạo booking trùng khi reload
+        session()->forget(['tourId', 'momoBookingData']);
 
-        $paypalClientId = '';
-
-        if ($resultCode == '0') {
-            $title = 'Thanh toán MoMo thành công';
-            return view('clients.booking', compact(
-                'title',
-                'tour',
-                'transIdMomo',
-                'paypalClientId',
-                'momoBookingData'
-            ));
-        } else {
-            $title = 'Thanh toán thất bại';
-            $transIdMomo = null;
-            $momoBookingData = [];
-            session()->forget('momoBookingData');
-            return view('clients.booking', compact(
-                'title',
-                'tour',
-                'transIdMomo',
-                'paypalClientId',
-                'momoBookingData'
-            ));
+        if ($resultCode != '0') {
+            // Thanh toán thất bại → redirect về trang tours với lỗi
+            return redirect()->route('tours')
+                ->with('error', 'Thanh toán MoMo thất bại (mã lỗi: ' . $resultCode . '). Vui lòng thử lại.');
         }
+
+        // ── Thanh toán thành công ──────────────────────────────────────
+        $tour = $this->tour->getTourDetail($tourId ?? ($momoBookingData['tourId'] ?? null));
+
+        if (!$tour || empty($momoBookingData)) {
+            return redirect()->route('tours')
+                ->with('error', 'Phiên giao dịch đã hết hạn. Vui lòng đặt tour lại.');
+        }
+
+        $userId = $this->getUserId();
+        if (!$userId) {
+            return redirect()->route('login')
+                ->with('error', 'Vui lòng đăng nhập để hoàn tất đặt tour.');
+        }
+
+        // Kiểm tra đã có booking trùng chưa (tránh tạo đôi khi callback gọi 2 lần)
+        if ($this->booking->hasActiveBooking($tour->tourId, $userId)) {
+            // Lấy booking cũ nhất để redirect đến đó
+            $existingBooking = DB::table('tbl_booking')
+                ->where('tourId', $tour->tourId)
+                ->where('userId', $userId)
+                ->orderBy('bookingId', 'desc')
+                ->first();
+            $existingCheckout = $existingBooking
+                ? DB::table('tbl_checkout')->where('bookingId', $existingBooking->bookingId)->first()
+                : null;
+            if ($existingBooking && $existingCheckout) {
+                return redirect()->route('tour-booked', [
+                    'bookingId'  => $existingBooking->bookingId,
+                    'checkoutId' => $existingCheckout->checkoutId,
+                ]);
+            }
+        }
+
+        // Tạo booking mới
+        $numAdults    = (int) ($momoBookingData['numAdults'] ?? 1);
+        $numChildren  = (int) ($momoBookingData['numChildren'] ?? 0);
+        $totalPrice   = (float) ($momoBookingData['totalPrice'] ?? 0);
+
+        $dataBooking = [
+            'tourId'      => $tour->tourId,
+            'userId'      => $userId,
+            'address'     => $momoBookingData['address'] ?? '',
+            'fullName'    => $momoBookingData['fullName'] ?? '',
+            'email'       => $momoBookingData['email'] ?? '',
+            'numAdults'   => $numAdults,
+            'numChildren' => $numChildren,
+            'phoneNumber' => $momoBookingData['tel'] ?? '',
+            'totalPrice'  => $totalPrice,
+            'bookingDate' => now()->toDateTimeString(),
+        ];
+
+        $bookingId = $this->booking->createBooking($dataBooking);
+
+        $dataCheckout = [
+            'bookingId'     => $bookingId,
+            'paymentMethod' => 'momo-payment',
+            'amount'        => $totalPrice,
+            'paymentStatus' => 'y', // MoMo đã xác nhận thanh toán thành công
+        ];
+        $checkoutId = $this->checkout->createCheckout($dataCheckout);
+
+        // Cập nhật số chỗ còn lại
+        $this->tour->updateTours($tour->tourId, [
+            'quantity' => max(0, $tour->quantity - ($numAdults + $numChildren))
+        ]);
+
+        // Gửi email xác nhận
+        try {
+            $user = DB::table('tbl_users')->where('userId', $userId)->first();
+            if ($user && $user->email) {
+                Mail::to($user->email)->send(new BookingConfirmation(
+                    array_merge((array) $dataBooking, ['bookingId' => $bookingId]),
+                    (array) $tour,
+                    (array) $user
+                ));
+                Mail::to($user->email)->send(new PaymentConfirmation(
+                    array_merge((array) $dataBooking, ['bookingId' => $bookingId]),
+                    $dataCheckout,
+                    (array) $tour,
+                    (array) $user
+                ));
+            }
+        } catch (\Exception $e) {
+            \Log::error('MoMo callback email error: ' . $e->getMessage());
+        }
+
+        return redirect()->route('tour-booked', [
+            'bookingId'  => $bookingId,
+            'checkoutId' => $checkoutId,
+        ]);
     }
 
     //Kiểm tra người dùng đã đặt và hoàn thành tour hay chưa để đánh giá

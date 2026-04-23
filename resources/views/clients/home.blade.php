@@ -136,7 +136,7 @@
                         <div class="destination-item style-two" data-aos-duration="1500" data-aos-offset="50">
                             <div class="image" style="max-height: 250px">
                                 <a href="#" class="heart"><i class="fas fa-heart"></i></a>
-                                <img src="{{ asset('admin/assets/images/gallery-tours/' . $tour->images[0]) }}"
+                                <img src="{{ asset('admin/assets/images/gallery-tours/' . ($tour->images[0] ?? 'cau-vang-da-nang_1775281412.png')) }}"
                                     alt="Destination">
                             </div>
                             <div class="content">

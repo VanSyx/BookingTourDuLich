@@ -150,6 +150,14 @@ class Tours extends Model
             ->join('tbl_checkout', 'tbl_booking.bookingId', '=', 'tbl_checkout.bookingId')
             ->where('tbl_booking.bookingId', '=', $bookingId)
             ->where('tbl_checkout.checkoutId', '=', $checkoutId)
+            ->select(
+                'tbl_tours.*',
+                'tbl_booking.bookingId', 'tbl_booking.fullName', 'tbl_booking.email',
+                'tbl_booking.phoneNumber', 'tbl_booking.address', 'tbl_booking.numAdults',
+                'tbl_booking.numChildren', 'tbl_booking.totalPrice', 'tbl_booking.bookingStatus',
+                'tbl_booking.bookingDate',
+                'tbl_checkout.paymentMethod', 'tbl_checkout.paymentStatus'
+            )
             ->first();
 
         return $booked;
