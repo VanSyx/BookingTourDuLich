@@ -11,7 +11,6 @@ use App\Http\Controllers\admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
 use App\Http\Controllers\clients\AboutController;
-use App\Http\Controllers\clients\ServicesController;
 use App\Http\Controllers\clients\ToursController;
 use App\Http\Controllers\clients\TourDetailController;
 use App\Http\Controllers\clients\DestinationController;
