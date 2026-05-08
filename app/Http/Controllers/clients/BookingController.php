@@ -274,11 +274,19 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Có vấn đề khi tạo đơn đặt tour. Vui lòng thử lại.'], 500);
         }
 
-        // Cập nhật số lượng chỗ còn lại của tour
-        $dataUpdate = [
-            'quantity' => $tour->quantity - $totalPassengers
-        ];
-        $this->tour->updateTours($tourId, $dataUpdate);
+        // Cập nhật số lượng chỗ còn lại — dùng atomic decrement() để chống race condition
+        $slotUpdated = DB::table('tbl_tours')
+            ->where('tourId', $tourId)
+            ->where('quantity', '>=', $totalPassengers) // Guard: chỉ trừ nếu còn đủ chỗ
+            ->decrement('quantity', $totalPassengers);
+
+        if ($slotUpdated === 0) {
+            // Vé vừa hết trong lúc xử lý (race condition)
+            return response()->json([
+                'success' => false,
+                'message' => 'Rất tiếc, tour vừa hết chỗ trong lúc xử lý. Vui lòng thử lại.'
+            ], 422);
+        }
 
         // Gửi email xác nhận booking cho user
         try {

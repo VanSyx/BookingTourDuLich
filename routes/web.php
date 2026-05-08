@@ -138,6 +138,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::post('/add-timeline', [ToursManagementController::class, 'addTimeline'])->name('admin.add-timeline');
 
     Route::post('/delete-tour', [ToursManagementController::class, 'deleteTour'])->name('admin.delete-tour');
+    Route::get('/tour-reviews/{id}', [ToursManagementController::class, 'getTourReviews'])->name('admin.tour-reviews');
 
     Route::get('/tour-edit', [ToursManagementController::class, 'getTourEdit'])->name('admin.tour-edit');
     Route::post('/edit-tour', [ToursManagementController::class, 'updateTour'])->name('admin.edit-tour');

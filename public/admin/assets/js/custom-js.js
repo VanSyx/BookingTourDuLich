@@ -161,6 +161,27 @@ $(document).ready(function () {
                     timeline.forEach((item) => {
                         editTimelineEntry(item);
                     });
+
+                    // Thêm nút Thêm Timeline vào cuối (nếu chưa có)
+                    if ($("#edit-add-timeline-btn").length === 0) {
+                        $("#step-3").append(`
+                            <div style="margin-top:12px;">
+                                <button type="button" id="edit-add-timeline-btn" class="btn btn-info btn-sm">
+                                    <i class="fa fa-plus"></i> Thêm Timeline
+                                </button>
+                            </div>`);
+                    }
+
+                    // Xử lý nút Thêm Timeline trong modal edit
+                    $("#step-3").off("click", "#edit-add-timeline-btn").on("click", "#edit-add-timeline-btn", function () {
+                        editTimelineEntry();
+                    });
+
+                    // Xử lý nút Xóa Timeline trong modal edit
+                    $("#step-3").off("click", ".edit-remove-timeline-btn").on("click", ".edit-remove-timeline-btn", function () {
+                        const id = $(this).data("id");
+                        $(`#timeline-entry-${id}`).remove();
+                    });
                 } else {
                     toastr.error(response.message);
                     setTimeout(() => {
@@ -377,25 +398,31 @@ $(document).ready(function () {
         const timelineEntry = `
         <div class="timeline-entry" id="timeline-entry-${timelineCounter_edit}">
             <label for="day-${timelineCounter_edit}">Ngày ${timelineCounter_edit}</label>
-            <input type="text" class="form-control" id="day-${timelineCounter_edit}" 
-                   name="day-${timelineCounter_edit}" 
-                   placeholder="Ngày thứ..." 
-                   value="${title}" 
+            <input type="text" class="form-control" id="day-${timelineCounter_edit}"
+                   name="day-${timelineCounter_edit}"
+                   placeholder="Ngày thứ..."
+                   value="${title}"
                    required>
-            
+
             <label for="itinerary-${timelineCounter_edit}" style="margin-top: 10px; display: block;">Lộ trình:</label>
             <textarea id="itinerary-${timelineCounter_edit}" name="itinerary-${timelineCounter_edit}" required>${description}</textarea>
+
+            <button type="button" class="btn btn-sm btn-danger edit-remove-timeline-btn" style="margin-top:8px;"
+                    data-id="${timelineCounter_edit}">Xóa Timeline này</button>
         </div>
     `;
 
-        // Thêm vào div#step-3
-        $("#step-3").append(timelineEntry);
+        // Chèn trước nút Thêm Timeline nếu đã có, ngược lại append
+        if ($("#edit-add-timeline-btn").length > 0) {
+            $(timelineEntry).insertBefore("#edit-add-timeline-btn");
+        } else {
+            $("#step-3").append(timelineEntry);
+        }
 
         // Khởi tạo CKEditor cho textarea vừa thêm
         if ($(`#itinerary-${timelineCounter_edit}`).length) {
             CKEDITOR.replace(`itinerary-${timelineCounter_edit}`);
         }
-        // formDataEdit.timeline.push(itineraryData);
 
         timelineCounter_edit++;
     }
@@ -502,10 +529,11 @@ $(document).ready(function () {
     });
     // Hàm thêm một timeline entry mới
     function addTimelineEntry() {
-        // Kiểm tra nếu số lượng timeline entries đã đạt giới hạn
-        console.log(maxTimelineDays);
+        // Kiểm tra giới hạn dựa trên số entry DOM thực tế (không dùng counter để tránh bug sau khi xóa)
+        const currentCount = $("#step-3 .timeline-entry").length;
+        console.log('currentCount:', currentCount, 'maxTimelineDays:', maxTimelineDays);
 
-        if (timelineCounter > maxTimelineDays) {
+        if (currentCount >= maxTimelineDays) {
             toastr.error(`Không thể thêm quá ${maxTimelineDays} ngày.`);
             return;
         }
@@ -544,11 +572,12 @@ $(document).ready(function () {
         addTimelineEntry();
     });
 
-    // Xử lý khi nhấn nút xóa timeline
+    // Xử lý khi nhấn nút xóa timeline (ADD TOURS)
     $("#step-3").on("click", ".remove-btn", function () {
         const id = $(this).data("id");
-
-        $(`#timeline-entry-${id}`).remove(); // Xóa div chứa timeline entry
+        $(`#timeline-entry-${id}`).remove();
+        // Không giảm timelineCounter vì counter dùng cho id DOM unique
+        // Giới hạn được kiểm tra bằng count DOM thực tế trong addTimelineEntry()
     });
 
     // Thêm nút thêm timeline vào div#step-3
@@ -901,6 +930,32 @@ $(document).ready(function () {
         });
     });
 
+    /********************************************
+     * REVIEWS TOUR                             *
+     ********************************************/
+    $(document).on('click', '.view-reviews', function() {
+        var tourId = $(this).data('tourid');
+        var url = $(this).data('url');
+
+        $('#tbody-reviews').html('<tr><td colspan="4" class="text-center">Đang tải dữ liệu...</td></tr>');
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                if(response.success) {
+                    $('#tbody-reviews').html(response.html);
+                } else {
+                    $('#tbody-reviews').html('<tr><td colspan="4" class="text-center text-danger">Không thể tải đánh giá.</td></tr>');
+                    toastr.error(response.message || "Không thể tải đánh giá");
+                }
+            },
+            error: function() {
+                $('#tbody-reviews').html('<tr><td colspan="4" class="text-center text-danger">Đã xảy ra lỗi khi tải đánh giá.</td></tr>');
+                toastr.error("Đã xảy ra lỗi khi tải đánh giá.");
+            }
+        });
+    });
 
     /********************************************
      * LOGIN ADMIN                             *

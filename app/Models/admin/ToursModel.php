@@ -97,4 +97,13 @@ class ToursModel extends Model
         return DB::table($tbl)->where('tourId', $tourId)->delete();
     }
 
+    public function getReviews($tourId) {
+        return DB::table('tbl_reviews')
+            ->join('tbl_users', 'tbl_reviews.userId', '=', 'tbl_users.userId')
+            ->select('tbl_reviews.*', 'tbl_users.username')
+            ->where('tbl_reviews.tourId', $tourId)
+            ->orderByDesc('tbl_reviews.timestamp')
+            ->get();
+    }
+
 }

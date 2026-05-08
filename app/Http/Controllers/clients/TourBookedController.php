@@ -65,13 +65,12 @@ class TourBookedController extends Controller
             return redirect()->back();
         }
 
-        $currentQuantity = $tour->quantity;
-        // Tính toán số lượng trả lại
         $return_quantity = $quantityAdults + $quantityChildren;
 
-        // Cập nhật lại số lượng mới cho tour
-        $newQuantity = $currentQuantity + $return_quantity;
-        $updateQuantity = $this->tour->updateTours($tourId, ['quantity' => $newQuantity]);
+        // Hoàn trả số chỗ — dùng atomic increment() để chống race condition
+        $updateQuantity = \Illuminate\Support\Facades\DB::table('tbl_tours')
+            ->where('tourId', $tourId)
+            ->increment('quantity', $return_quantity);
 
         // Hủy booking
         $updateBooking = $this->booking->cancelBooking($bookingId);
@@ -103,6 +102,35 @@ class TourBookedController extends Controller
         }
 
         if ($updateQuantity && $updateBooking) {
+            // --- GỬI EMAIL THÔNG BÁO HỦY ---
+            try {
+                // Fetch the booking record
+                $bookingRecord = \Illuminate\Support\Facades\DB::table('tbl_booking')
+                    ->where('bookingId', $bookingId)
+                    ->first();
+
+                if ($bookingRecord) {
+                    $user = \Illuminate\Support\Facades\DB::table('tbl_users')
+                        ->where('userId', $bookingRecord->userId)
+                        ->first();
+                    
+                    if ($user && $user->email && $tour) {
+                        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\BookingCancellation(
+                            (array) $bookingRecord,
+                            (array) $tour,
+                            (array) $user,
+                            'user'
+                        ));
+                        \Log::info('Cancellation email sent by user', [
+                            'bookingId' => $bookingId,
+                            'email'     => $user->email,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('User Cancellation email failed', ['error' => $e->getMessage()]);
+            }
+
             toastr()->success('Hủy thành công!' . $penaltyMessage, 'Thông báo');
         } else {
             toastr()->error('Có lỗi xảy ra !', 'Thông báo');

@@ -63,6 +63,17 @@ class ContactModel extends Model
     }
 
     /**
+     * Đếm số booking bị hủy trong 7 ngày gần nhất
+     */
+    public function countCancelledBookings()
+    {
+        return DB::table('tbl_booking')
+            ->where('bookingStatus', 'c')
+            ->where('bookingDate', '>=', now()->subDays(7))
+            ->count();
+    }
+
+    /**
      * Đếm số review mới trong 7 ngày gần nhất
      */
     public function countNewReviews()
@@ -81,6 +92,20 @@ class ContactModel extends Model
             ->join('tbl_tours', 'tbl_booking.tourId', '=', 'tbl_tours.tourId')
             ->select('tbl_booking.bookingId', 'tbl_booking.fullName', 'tbl_booking.bookingDate', 'tbl_tours.title as tourTitle')
             ->where('tbl_booking.bookingStatus', 'b')
+            ->orderByDesc('tbl_booking.bookingDate')
+            ->take(5)
+            ->get();
+    }
+
+    /**
+     * Lấy 5 booking bị hủy mới nhất
+     */
+    public function getCancelledBookings()
+    {
+        return DB::table('tbl_booking')
+            ->join('tbl_tours', 'tbl_booking.tourId', '=', 'tbl_tours.tourId')
+            ->select('tbl_booking.bookingId', 'tbl_booking.fullName', 'tbl_booking.bookingDate', 'tbl_tours.title as tourTitle')
+            ->where('tbl_booking.bookingStatus', 'c')
             ->orderByDesc('tbl_booking.bookingDate')
             ->take(5)
             ->get();

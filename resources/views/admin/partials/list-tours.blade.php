@@ -11,6 +11,12 @@
         <td>{{ date('d-m-Y', strtotime($tour->startDate)) }}</td>
         <td>{{ date('d-m-Y', strtotime($tour->endDate)) }}</td>
         <td>
+            <button type="button" class="btn btn-info btn-sm view-reviews" data-toggle="modal" data-target="#reviews-tour-modal"
+                data-tourid="{{ $tour->tourId }}" data-url="{{ route('admin.tour-reviews', ['id' => $tour->tourId]) }}">
+                <i class="fa fa-star"></i> Xem Đánh giá
+            </button>
+        </td>
+        <td>
             <button type="button" class="btn-action-listTours edit-tour" data-toggle="modal" data-target="#edit-tour-modal"
                 data-tourId="{{ $tour->tourId }}" data-urledit = "{{ route('admin.tour-edit') }}">
                 <span class="glyphicon glyphicon-edit" style="color: #26B99A; font-size:24px" aria-hidden="true"></span>

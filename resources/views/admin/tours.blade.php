@@ -49,6 +49,7 @@
                                                         <th>Khả dụng</th>
                                                         <th>Ngày bắt đầu</th>
                                                         <th>Ngày kết thúc</th>
+                                                        <th>Đánh giá</th>
                                                         <th>Sửa</th>
                                                         <th>Xóa</th>
                                                     </tr>
@@ -67,6 +68,38 @@
             </div>
         </div>
         <!-- /page content -->
+
+        <!-- Modal Xem Đánh Giá -->
+        <div class="modal fade" id="reviews-tour-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Đánh giá của Tour</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Người dùng</th>
+                                        <th>Đánh giá</th>
+                                        <th>Nội dung</th>
+                                        <th>Thời gian</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-reviews">
+                                    <tr><td colspan="4" class="text-center">Đang tải...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal Edit Tour-->
         <div class="modal fade" id="edit-tour-modal" tabindex="-1" role="dialog" aria-labelledby="edit-tour-Label"
             aria-hidden="true">
@@ -168,7 +201,7 @@
                                             hành<span>*</span></label>
                                         <div class="col-md-6 col-sm-6">
                                             <input type="text" class="form-control datetimepicker" id="start_date"
-                                                name="start_date" disabled>
+                                                name="start_date">
                                         </div>
                                     </div>
                                     <div class="field item form-group">
@@ -176,7 +209,7 @@
                                             thúc<span>*</span></label>
                                         <div class="col-md-6 col-sm-6">
                                             <input type="text" class="form-control datetimepicker" id="end_date"
-                                                name="end_date" disabled>
+                                                name="end_date">
                                         </div>
                                     </div>
 

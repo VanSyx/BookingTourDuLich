@@ -31,13 +31,16 @@ class AppServiceProvider extends ServiceProvider
 
             // Thông báo bổ sung
             $newBookingsCount = $contactModel->countNewBookings();
+            $cancelledBookingsCount = $contactModel->countCancelledBookings(); // NEW
             $newUsersCount    = $contactModel->countNewUsers();
             $newReviewsCount  = $contactModel->countNewReviews();
             $newBookingsList  = $contactModel->getNewBookings();
+            $cancelledBookingsList = $contactModel->getCancelledBookings(); // NEW
 
-            // Tổng badge = liên hệ chưa reply + booking mới + user mới + review mới
+            // Tổng badge = liên hệ chưa reply + booking mới + booking hủy + user mới + review mới
             $totalNotifications = $unreadData['countUnread']
                                 + $newBookingsCount
+                                + $cancelledBookingsCount
                                 + $newUsersCount
                                 + $newReviewsCount;
 
@@ -45,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
             $view->with('unreadContacts',     $unreadData['contacts']);
             $view->with('newBookingsCount',   $newBookingsCount);
             $view->with('newBookingsList',    $newBookingsList);
+            $view->with('cancelledBookingsCount', $cancelledBookingsCount); // NEW
+            $view->with('cancelledBookingsList', $cancelledBookingsList); // NEW
             $view->with('newUsersCount',      $newUsersCount);
             $view->with('newReviewsCount',    $newReviewsCount);
             $view->with('totalNotifications', $totalNotifications);

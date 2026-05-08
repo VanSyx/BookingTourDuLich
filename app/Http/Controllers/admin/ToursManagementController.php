@@ -348,4 +348,34 @@ class ToursManagementController extends Controller
         }
     }
 
+    public function getTourReviews($id)
+    {
+        $reviews = $this->tours->getReviews($id);
+
+        if ($reviews->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'html' => '<tr><td colspan="4" class="text-center">Chưa có đánh giá nào.</td></tr>'
+            ]);
+        }
+
+        $html = '';
+        foreach ($reviews as $review) {
+            $stars = str_repeat('<i class="fa fa-star text-warning"></i>', $review->rating) . 
+                     str_repeat('<i class="fa fa-star-o text-muted"></i>', 5 - $review->rating);
+            $time = date('d/m/Y H:i', strtotime($review->timestamp));
+            
+            $html .= '<tr>';
+            $html .= '<td>' . htmlspecialchars($review->username ?? 'Khách') . '</td>';
+            $html .= '<td>' . $stars . '</td>';
+            $html .= '<td>' . nl2br(htmlspecialchars($review->content ?? '')) . '</td>';
+            $html .= '<td>' . $time . '</td>';
+            $html .= '</tr>';
+        }
+
+        return response()->json([
+            'success' => true,
+            'html' => $html
+        ]);
+    }
 }

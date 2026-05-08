@@ -41,14 +41,25 @@
             </div> <!-- end booking__infor -->
 
             <!-- VÉ ĐIỆN TỬ E-TICKET -->
-            <div class="e-ticket-section" style="margin-top: 30px; text-align: center; border: 2px dashed #ff6600; padding: 20px; border-radius: 10px; background: #fffcf9;">
-                <h3 style="color: #ff6600; font-weight: bold; margin-bottom: 15px;"><i class="fa fa-qrcode"></i> VÉ ĐIỆN TỬ (E-TICKET)</h3>
-                <p>Xuất trình mã QR này cho Hướng Dẫn Viên vào ngày khởi hành để Check-in.</p>
-                <div class="qr-code-wrapper" style="background:#fff; padding: 15px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TRAVELA-TICKET-{{ $tour_booked->bookingId }}-{{ $tour_booked->tourId }}" alt="QR E-Ticket" />
+            @if ($tour_booked->bookingStatus == 'c')
+                <div class="e-ticket-section" style="margin-top: 30px; text-align: center; border: 2px dashed #e74c3c; padding: 20px; border-radius: 10px; background: #ffe6e6;">
+                    <h3 style="color: #e74c3c; font-weight: bold; margin-bottom: 15px;"><i class="fa fa-times-circle"></i> TOUR ĐÃ BỊ HỦY</h3>
+                    <p style="color: #e74c3c;">Rất tiếc, chuyến đi này đã bị hủy. Mã QR đã mất hiệu lực.</p>
+                    <div class="qr-code-wrapper" style="background:#fff; padding: 15px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); opacity: 0.3; filter: grayscale(100%);">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=CANCELLED-{{ $bookingId }}" alt="QR Cancelled" />
+                    </div>
+                    <p style="margin-top:10px; font-weight: bold; color: #555; text-decoration: line-through;">Mã Đặt Chỗ: <span style="color:#e74c3c;">#{{ $bookingId }}</span></p>
                 </div>
-                <p style="margin-top:10px; font-weight: bold; color: #555;">Mã Đặt Chỗ: <span style="color:#e74c3c;">#{{ $bookingId }}</span></p>
-            </div>
+            @else
+                <div class="e-ticket-section" style="margin-top: 30px; text-align: center; border: 2px dashed #ff6600; padding: 20px; border-radius: 10px; background: #fffcf9;">
+                    <h3 style="color: #ff6600; font-weight: bold; margin-bottom: 15px;"><i class="fa fa-qrcode"></i> VÉ ĐIỆN TỬ (E-TICKET)</h3>
+                    <p>Xuất trình mã QR này cho Hướng Dẫn Viên vào ngày khởi hành để Check-in.</p>
+                    <div class="qr-code-wrapper" style="background:#fff; padding: 15px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TRAVELA-TICKET-{{ $tour_booked->bookingId }}-{{ $tour_booked->tourId }}" alt="QR E-Ticket" />
+                    </div>
+                    <p style="margin-top:10px; font-weight: bold; color: #555;">Mã Đặt Chỗ: <span style="color:#e74c3c;">#{{ $bookingId }}</span></p>
+                </div>
+            @endif
 
             <!-- Privacy Agreement Section -->
             <div class="privacy-section">
@@ -138,6 +149,8 @@
                     <a href="{{ route('tour-detail', ['id' => $tour_booked->tourId]) }}" class="booking-btn"style="display: inline-block; text-align: center;">
                        Đánh giá
                     </a>
+                @elseif ($tour_booked->bookingStatus == 'c')
+                    <button type="button" class="booking-btn" style="background: #ccc; cursor: not-allowed; border: none;" disabled>Đã Hủy</button>
                 @else
                     <button type="submit" class="booking-btn btn-cancel-booking {{ $hide }}">Hủy
                         Tour</button>

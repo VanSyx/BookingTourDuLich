@@ -143,6 +143,26 @@
                             @endforeach
                         @endif
 
+                        {{-- Booking bị hủy --}}
+                        @if ($cancelledBookingsCount > 0)
+                            <li class="nav-item" style="padding:6px 15px; background:#ffebee;">
+                                <a class="dropdown-item" href="{{ route('admin.booking') }}" style="padding:0;">
+                                    <span style="color:#c62828; font-weight:600;">
+                                        <i class="fa fa-calendar-times-o"></i>
+                                        {{ $cancelledBookingsCount }} tour đã bị hủy
+                                    </span>
+                                </a>
+                            </li>
+                            @foreach ($cancelledBookingsList->take(2) as $item)
+                                <li class="nav-item" style="padding:4px 15px 4px 30px; border-bottom:1px solid #f5f5f5;">
+                                    <a class="dropdown-item" href="{{ route('admin.booking-detail', ['id' => $item->bookingId]) }}" style="padding:0;">
+                                        <b>{{ $item->fullName }}</b>
+                                        <span style="display:block; color:#888; font-size:12px;">{{ $item->tourTitle }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        @endif
+
                         {{-- User mới đăng ký --}}
                         @if ($newUsersCount > 0)
                             <li class="nav-item" style="padding:6px 15px; background:#e3f2fd; border-bottom:1px solid #eee;">

@@ -132,8 +132,10 @@
 {{-- jquery-toast --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-{{-- paypal-payment --}}
-<script src="https://www.paypal.com/sdk/js?client-id={{ env('PAYPAL_SANDBOX_CLIENT_ID') }}"></script>
+{{-- paypal-payment: chỉ load SDK trên trang booking (booking.blade.php tự load conditional) --}}
+@if(config('paypal.sandbox.client_id') && !empty(config('paypal.sandbox.client_id')))
+<script src="https://www.paypal.com/sdk/js?client-id={{ config('paypal.sandbox.client_id') }}&currency=USD"></script>
+@endif
 
 <!-- Custom script -->
 <script src="{{asset('clients/assets/js/custom-js.js?v=' . time())}}"></script>
